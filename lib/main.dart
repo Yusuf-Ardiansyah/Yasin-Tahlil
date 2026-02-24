@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +17,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:geocoding/geocoding.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:upgrader/upgrader.dart';
+import 'package:version/version.dart'; // Tambahan wajib untuk osVersion
 
 // Import file lokal kamu
 import 'tasbih_page.dart';
@@ -61,7 +63,7 @@ class NotificationService {
 }
 
 // ==========================================
-// APP CORE & THEME + AUTO UPDATE FITUR
+// APP CORE & THEME + AUTO UPDATE FITUR (FINAL v12+)
 // ==========================================
 class AlWaqiahApp extends StatelessWidget {
   const AlWaqiahApp({super.key});
@@ -74,13 +76,20 @@ class AlWaqiahApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF0F0F0F),
         useMaterial3: true,
       ),
-      // PERBAIKAN FINAL UPGRADER:
-      // Semua parameter (dialogStyle, showIgnore, showLater) ditaruh SINI, bukan di dalam Upgrader()
+      // KONFIGURASI AUTO UPDATE PLATINUM (FORMAT UPGRADER V12+)
       home: UpgradeAlert(
         dialogStyle: UpgradeDialogStyle.material,
         showIgnore: false,
         showLater: true,
-        upgrader: Upgrader(), // Biarkan kosong jika default
+        upgrader: Upgrader(
+          storeController: UpgraderStoreController(
+            onAndroid: () => UpgraderAppcastStore(
+              appcastURL: 'https://raw.githubusercontent.com/Yusuf-Ardiansyah/Yasin-Tahlil/refs/heads/main/appcast.xml',
+              osVersion: Version(1, 0, 0), // PERBAIKAN: Format 'Version' murni
+            ),
+          ),
+          debugDisplayAlways: false, // Ubah ke true jika ingin ngetest tampilan pop-up
+        ),
         child: const MenuUtama(),
       ),
     );
