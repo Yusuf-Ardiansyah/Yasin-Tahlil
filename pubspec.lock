@@ -536,6 +536,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.3"
+  ota_update:
+    dependency: "direct main"
+    description:
+      name: ota_update
+      sha256: "1f4c7c3c4f306729a6c00b84435096ce2d8b28439013f7237173acc699b2abc8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.1.0"
   package_info_plus:
     dependency: transitive
     description:
@@ -934,7 +942,7 @@ packages:
     source: hosted
     version: "2.2.0"
   version:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: version
       sha256: "3d4140128e6ea10d83da32fef2fa4003fccbf6852217bb854845802f04191f94"

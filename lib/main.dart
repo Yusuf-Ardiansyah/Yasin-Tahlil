@@ -17,7 +17,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:geocoding/geocoding.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:upgrader/upgrader.dart';
-import 'package:version/version.dart'; // Tambahan wajib untuk osVersion
+import 'package:version/version.dart';
 
 // Import file lokal kamu
 import 'tasbih_page.dart';
@@ -63,10 +63,18 @@ class NotificationService {
 }
 
 // ==========================================
-// APP CORE & THEME + AUTO UPDATE FITUR (FINAL v12+)
+// APP CORE & THEME + AUTO UPDATE CHROME
 // ==========================================
 class AlWaqiahApp extends StatelessWidget {
   const AlWaqiahApp({super.key});
+
+  void executeUpdate() async {
+    final Uri url = Uri.parse('https://github.com/Yusuf-Ardiansyah/Yasin-Tahlil/releases/latest/download/app-arm64-v8a-release.apk');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -76,19 +84,22 @@ class AlWaqiahApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF0F0F0F),
         useMaterial3: true,
       ),
-      // KONFIGURASI AUTO UPDATE PLATINUM (FORMAT UPGRADER V12+)
       home: UpgradeAlert(
         dialogStyle: UpgradeDialogStyle.material,
         showIgnore: false,
         showLater: true,
+        onUpdate: () {
+          executeUpdate();
+          return false;
+        },
         upgrader: Upgrader(
           storeController: UpgraderStoreController(
             onAndroid: () => UpgraderAppcastStore(
               appcastURL: 'https://raw.githubusercontent.com/Yusuf-Ardiansyah/Yasin-Tahlil/refs/heads/main/appcast.xml',
-              osVersion: Version(1, 0, 0), // PERBAIKAN: Format 'Version' murni
+              osVersion: Version(1, 0, 0),
             ),
           ),
-          debugDisplayAlways: false, // Ubah ke true jika ingin ngetest tampilan pop-up
+          debugDisplayAlways: false,
         ),
         child: const MenuUtama(),
       ),
@@ -326,7 +337,7 @@ class _JadwalSholatPageState extends State<JadwalSholatPage> {
 }
 
 // ==========================================
-// HALAMAN: ARAH KIBLAT (KOMPAS)
+// HALAMAN: ARAH KIBLAT (DESAIN PREMIUM KA'BAH)
 // ==========================================
 class QiblahPage extends StatefulWidget {
   const QiblahPage({super.key});
@@ -364,11 +375,52 @@ class _QiblahPageState extends State<QiblahPage> {
                   child: Padding(padding: const EdgeInsets.symmetric(vertical: 30), child: Column(children: [
                     Text("${q.direction.toStringAsFixed(0)}°", style: TextStyle(fontSize: 45, fontWeight: FontWeight.bold, color: sel < 2.0 ? Colors.greenAccent : const Color(0xFFFFD54F))),
                     const SizedBox(height: 15),
-                    Stack(alignment: Alignment.center, children: [
-                      Container(width: 180, height: 180, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white10, width: 2))),
-                      Transform.rotate(angle: (q.direction * (math.pi / 180) * -1), child: const Icon(Icons.explore_outlined, size: 160, color: Colors.white24)),
-                      Transform.rotate(angle: (q.qiblah * (math.pi / 180) * -1), child: Icon(Icons.location_on, size: 50, color: sel < 2.0 ? Colors.greenAccent : const Color(0xFFFFD54F))),
-                    ]),
+
+                    // =============== INI DESAIN KIBLAT PREMIUM ===============
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // 1. Lingkaran luar emas/platinum biar rapi
+                        Container(
+                            width: 280,
+                            height: 280,
+                            decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: const Color(0xFFFFD54F).withOpacity(0.4), width: 2)
+                            )
+                        ),
+
+                        // 2. Gambar Kompas (Sebagai Latar, dibikin agak redup biar elegan)
+                        Transform.rotate(
+                          angle: (q.direction * (math.pi / 180) * -1),
+                          child: Opacity(
+                            opacity: 0.4,
+                            child: ColorFiltered(
+                              colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                              child: Image.asset('assets/images/compass.png', width: 220),
+                            ),
+                          ),
+                        ),
+
+                        // 3. Ikon Ka'bah milikmu (Sebagai Penunjuk Arah di ujung lingkaran)
+                        Transform.rotate(
+                          angle: (q.qiblah * (math.pi / 180) * -1),
+                          child: SizedBox(
+                            width: 280,
+                            height: 280,
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 10), // Jarak Ka'bah dari tepi atas
+                                child: Image.asset('assets/images/kabah.png', width: 55),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    // =========================================================
+
                     const SizedBox(height: 20),
                     Text(sel < 2.0 ? "POSISI KIBLAT PAS!" : "PUTAR HP PERLAHAN", style: TextStyle(color: sel < 2.0 ? Colors.greenAccent : Colors.white54, fontWeight: FontWeight.bold)),
                   ])),
