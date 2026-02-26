@@ -5,11 +5,11 @@
         <description>Pembaruan terbaru untuk aplikasi Yasin dan Tahlil Platinum</description>
         <language>id</language>
         <item>
-            <title>Versi 1.2.1 (Tampilan Responsif &amp; Ikon Baru)</title>
+            <title>Versi 1.2.2 (Tampilan Responsif &amp; Ikon Baru)</title>
             <description>Pembaruan eksklusif: Tampilan aplikasi kini otomatis menyesuaikan dengan semua ukuran layar HP (Responsive UI), perbaikan ukuran teks Arab agar lebih nyaman dibaca, dan pembaruan Ikon Aplikasi yang lebih elegan.</description>
             <pubDate>Fri, 27 Feb 2026 02:30:00 +0700</pubDate>
             <enclosure url="https://github.com/Yusuf-Ardiansyah/Yasin-Tahlil/releases/latest/download/app-arm64-v8a-release.apk"
-                sparkle:version="1.2.1"
+                sparkle:version="1.2.2"
                 sparkle:os="android" />
         </item>
     </channel>
