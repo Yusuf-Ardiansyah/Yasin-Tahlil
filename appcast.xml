@@ -5,11 +5,11 @@
         <description>Pembaruan terbaru untuk aplikasi Yasin dan Tahlil Platinum</description>
         <language>id</language>
         <item>
-            <title>Versi 1.1.0 (Kompas Kiblat Premium)</title>
-            <description>Penambahan fitur baru: Kompas Kiblat dengan desain Ka'bah premium, Kumpulan Doa, dan Tasbih Digital. Serta optimasi UI agar aplikasi lebih elegan, ringan, dan lancar.</description>
-            <pubDate>Wed, 25 Feb 2026 23:00:00 +0700</pubDate>
-            <enclosure url="https://github.com/Yusuf-Ardiansyah/Yasin-Tahlil/releases/download/1.1.0/app-arm64-v8a-release.apk"
-                sparkle:version="1.1.0"
+            <title>Versi 1.2.0 (Weton Jodoh &amp; Jadwal Sholat Premium)</title>
+            <description>Penambahan fitur baru yang sangat dinantikan: Cek Weton Jodoh lengkap dengan filosofi Primbon, Jam Realtime pada Jadwal Sholat, penambahan Pasaran Jawa pada Kalkulator Selamatan, dan sistem Pembaruan Otomatis Eksklusif.</description>
+            <pubDate>Thu, 26 Feb 2026 21:30:00 +0700</pubDate>
+            <enclosure url="https://github.com/Yusuf-Ardiansyah/Yasin-Tahlil/releases/latest/download/app-arm64-v8a-release.apk"
+                sparkle:version="1.2.0"
                 sparkle:os="android" />
         </item>
     </channel>
