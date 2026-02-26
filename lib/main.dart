@@ -21,6 +21,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:upgrader/upgrader.dart';
 import 'package:version/version.dart';
 
+// IMPORT SENJATA RESPONSIVE SULTAN
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id_ID', null);
@@ -60,7 +63,7 @@ class NotificationService {
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
-      UILocalNotificationDateInterpretation.absoluteTime,
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 }
@@ -80,10 +83,7 @@ class AlWaqiahApp extends StatelessWidget {
 
     try {
       if (await canLaunchUrl(url)) {
-        await launchUrl(
-          url,
-          mode: LaunchMode.externalApplication,
-        );
+        await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
         debugPrint("Gagal: canLaunchUrl mengembalikan nilai false.");
       }
@@ -94,39 +94,49 @@ class AlWaqiahApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0F0F0F),
-        useMaterial3: true,
-      ),
-      home: UpgradeAlert(
-        dialogStyle: UpgradeDialogStyle.cupertino, // Gaya elegan ala iOS
-
-        // --- BAGIAN FORCE UPDATE (WAJIB UPDATE) ---
-        showIgnore: false,       // Hilangkan tombol "Abaikan"
-        showLater: false,        // Hilangkan tombol "Nanti"
-        // ------------------------------------------
-
-        onUpdate: () {
-          executeUpdate();
-          return false;
-        },
-        upgrader: Upgrader(
-          messages: _CustomUpgraderMessages(), // Panggil pesan custom di sini
-          storeController: UpgraderStoreController(
-            onAndroid:
-                () => UpgraderAppcastStore(
-              appcastURL:
-              'https://raw.githubusercontent.com/Yusuf-Ardiansyah/Yasin-Tahlil/refs/heads/main/appcast.xml',
-              osVersion: Version(1, 0, 0),
-            ),
+    // BUNGKUS DENGAN SCREENUTILINIT AGAR SEMUA OTOMATIS RESPONSIVE
+    return ScreenUtilInit(
+      designSize: const Size(360, 800), // Ukuran standar desain HP
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (_, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            brightness: Brightness.dark,
+            scaffoldBackgroundColor: const Color(0xFF0F0F0F),
+            useMaterial3: true,
           ),
-          debugDisplayAlways: false,
-        ),
-        child: const MenuUtama(),
-      ),
+          home: UpgradeAlert(
+            dialogStyle: UpgradeDialogStyle.cupertino,
+            // Gaya elegan ala iOS
+            // --- BAGIAN FORCE UPDATE (WAJIB UPDATE) ---
+            showIgnore: false,
+            // Hilangkan tombol "Abaikan"
+            showLater: false,
+            // Hilangkan tombol "Nanti"
+            // ------------------------------------------
+            onUpdate: () {
+              executeUpdate();
+              return false;
+            },
+            upgrader: Upgrader(
+              messages: _CustomUpgraderMessages(),
+              // Panggil pesan custom di sini
+              storeController: UpgraderStoreController(
+                onAndroid:
+                    () => UpgraderAppcastStore(
+                      appcastURL:
+                          'https://raw.githubusercontent.com/Yusuf-Ardiansyah/Yasin-Tahlil/refs/heads/main/appcast.xml',
+                      osVersion: Version(1, 0, 0),
+                    ),
+              ),
+              debugDisplayAlways: false,
+            ),
+            child: const MenuUtama(),
+          ),
+        );
+      },
     );
   }
 }
@@ -139,7 +149,8 @@ class _CustomUpgraderMessages extends UpgraderMessages {
   String get title => '✨ PEMBARUAN EKSKLUSIF ✨';
 
   @override
-  String get body => 'Versi terbaru Yasin & Tahlil Premium sudah tersedia.\n\nNikmati fitur terbaru, tampilan yang lebih elegan, dan perbaikan performa untuk kenyamanan ibadah Anda.\n\nMohon lakukan pembaruan sekarang untuk melanjutkan.';
+  String get body =>
+      'Versi terbaru Yasin & Tahlil Premium sudah tersedia.\n\nNikmati fitur terbaru, tampilan yang lebih elegan, dan perbaikan performa untuk kenyamanan ibadah Anda.\n\nMohon lakukan pembaruan sekarang untuk melanjutkan.';
 
   @override
   String get prompt => 'Silakan klik tombol di bawah ini:';
@@ -175,7 +186,7 @@ class MenuUtama extends StatelessWidget {
       },
       {
         "text":
-        "Cukuplah Allah menjadi Penolong kami dan Allah adalah sebaik-baik Pelindung.",
+            "Cukuplah Allah menjadi Penolong kami dan Allah adalah sebaik-baik Pelindung.",
         "surah": "Ali 'Imran: 173",
       },
       {
@@ -184,12 +195,12 @@ class MenuUtama extends StatelessWidget {
       },
       {
         "text":
-        "Dan barangsiapa bertawakal kepada Allah, niscaya Allah akan mencukupkan keperluannya.",
+            "Dan barangsiapa bertawakal kepada Allah, niscaya Allah akan mencukupkan keperluannya.",
         "surah": "At-Thalaq: 3",
       },
       {
         "text":
-        "Boleh jadi kamu membenci sesuatu, padahal ia amat baik bagimu.",
+            "Boleh jadi kamu membenci sesuatu, padahal ia amat baik bagimu.",
         "surah": "Al-Baqarah: 216",
       },
     ];
@@ -201,81 +212,82 @@ class MenuUtama extends StatelessWidget {
     final quote = _getRandomQuote();
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'YASIN & TAHLIL',
           style: TextStyle(
-            color: Color(0xFFFFD54F),
+            color: const Color(0xFFFFD54F),
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
+            fontSize: 20.sp,
           ),
         ),
         centerTitle: true,
         backgroundColor: const Color(0xFF00332B),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(15),
+        padding: EdgeInsets.all(15.w),
         children: [
           Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(20),
+            margin: EdgeInsets.only(bottom: 10.h),
+            padding: EdgeInsets.all(20.w),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFF00332B), Color(0xFF001A16)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(20.r),
               border: Border.all(
                 color: const Color(0xFFFFD54F).withOpacity(0.5),
               ),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFFFFD54F).withOpacity(0.05),
-                  blurRadius: 10,
-                  spreadRadius: 2,
+                  blurRadius: 10.r,
+                  spreadRadius: 2.r,
                 ),
               ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
                     Icon(
                       Icons.format_quote,
-                      color: Color(0xFFFFD54F),
-                      size: 24,
+                      color: const Color(0xFFFFD54F),
+                      size: 24.sp,
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: 8.w),
                     Text(
                       "INSPIRASI HARI INI",
                       style: TextStyle(
-                        color: Color(0xFFFFD54F),
+                        color: const Color(0xFFFFD54F),
                         fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                        fontSize: 12.sp,
                         letterSpacing: 1.5,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12.h),
                 Text(
                   '"${quote["text"]!}"',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 14,
+                    fontSize: 14.sp,
                     fontStyle: FontStyle.italic,
                     height: 1.5,
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12.h),
                 Align(
                   alignment: Alignment.centerRight,
                   child: Text(
                     "- QS. ${quote["surah"]!} -",
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white70,
-                      fontSize: 12,
+                      fontSize: 12.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -376,40 +388,40 @@ class MenuUtama extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: _kontakYusuf,
       child: Container(
-        height: 85,
-        decoration: const BoxDecoration(
-          color: Color(0xFF00332B),
+        height: 85.h,
+        decoration: BoxDecoration(
+          color: const Color(0xFF00332B),
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+            topLeft: Radius.circular(20.r),
+            topRight: Radius.circular(20.r),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const CircleAvatar(
-              radius: 24,
+            CircleAvatar(
+              radius: 24.r,
               backgroundColor: Colors.white,
               child: CircleAvatar(
-                radius: 22,
-                backgroundImage: AssetImage('assets/images/yusuf.png'),
+                radius: 22.r,
+                backgroundImage: const AssetImage('assets/images/yusuf.png'),
               ),
             ),
-            const SizedBox(width: 15),
-            const Column(
+            SizedBox(width: 15.w),
+            Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   "Dibuat oleh",
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                  style: TextStyle(color: Colors.white70, fontSize: 12.sp),
                 ),
                 Text(
                   "Yusuf Ardiansyah",
                   style: TextStyle(
-                    color: Color(0xFFFFD54F),
+                    color: const Color(0xFFFFD54F),
                     fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                    fontSize: 18.sp,
                   ),
                 ),
               ],
@@ -421,37 +433,40 @@ class MenuUtama extends StatelessWidget {
   }
 
   Widget _buildSectionTitle(String t) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+    padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 5.w),
     child: Text(
       t,
-      style: const TextStyle(
+      style: TextStyle(
         color: Colors.amberAccent,
-        fontSize: 12,
+        fontSize: 12.sp,
         fontWeight: FontWeight.bold,
       ),
     ),
   );
 
   Widget _buildMenuItem(
-      BuildContext c,
-      String l,
-      String t,
-      String s,
-      Color col,
-      String type,
-      ) => Card(
+    BuildContext c,
+    String l,
+    String t,
+    String s,
+    Color col,
+    String type,
+  ) => Card(
     color: const Color(0xFF1A1A1A),
-    margin: const EdgeInsets.only(bottom: 10),
+    margin: EdgeInsets.only(bottom: 10.h),
     child: ListTile(
       leading: CircleAvatar(
         backgroundColor: col.withOpacity(0.2),
-        child: Text(l),
+        child: Text(l, style: TextStyle(fontSize: 16.sp)),
       ),
-      title: Text(t, style: const TextStyle(fontWeight: FontWeight.bold)),
-      subtitle: Text(s, style: const TextStyle(fontSize: 12)),
-      trailing: const Icon(
+      title: Text(
+        t,
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+      ),
+      subtitle: Text(s, style: TextStyle(fontSize: 12.sp)),
+      trailing: Icon(
         Icons.arrow_forward_ios,
-        size: 15,
+        size: 15.sp,
         color: Colors.white24,
       ),
       onTap: () async {
@@ -526,48 +541,74 @@ class _WetonJodohPageState extends State<WetonJodohPage> {
   DateTime? tglWanita;
   Map<String, dynamic>? hasilRamalan;
 
-  final List<String> listHari = ['Kamis', 'Jumat', 'Sabtu', 'Minggu', 'Senin', 'Selasa', 'Rabu'];
+  final List<String> listHari = [
+    'Kamis',
+    'Jumat',
+    'Sabtu',
+    'Minggu',
+    'Senin',
+    'Selasa',
+    'Rabu',
+  ];
   final List<String> listPasaran = ['Wage', 'Kliwon', 'Legi', 'Pahing', 'Pon'];
 
   final Map<String, int> neptuHari = {
-    'Minggu': 5, 'Senin': 4, 'Selasa': 3, 'Rabu': 7, 'Kamis': 8, 'Jumat': 6, 'Sabtu': 9
+    'Minggu': 5,
+    'Senin': 4,
+    'Selasa': 3,
+    'Rabu': 7,
+    'Kamis': 8,
+    'Jumat': 6,
+    'Sabtu': 9,
   };
   final Map<String, int> neptuPasaran = {
-    'Legi': 5, 'Pahing': 9, 'Pon': 7, 'Wage': 4, 'Kliwon': 8
+    'Legi': 5,
+    'Pahing': 9,
+    'Pon': 7,
+    'Wage': 4,
+    'Kliwon': 8,
   };
 
   final List<Map<String, String>> hasilJodoh = [
     {
       "title": "PESTHI (8/0) - Kedamaian Sejati",
-      "desc": "Dalam perhitungan Primbon Jawa, jatuh pada hitungan PESTHI adalah sebuah anugerah agung dari Sang Pencipta. Rumah tangga yang dibangun di atas fondasi ini dijanjikan akan berjalan dengan sangat rukun, tenteram, dan damai sejahtera hingga masa tua memisahkan.\n\nKehidupan pernikahan kalian ibarat air sungai yang mengalir tenang. Meskipun sesekali ada kerikil masalah atau perbedaan pendapat, hal tersebut sama sekali tidak akan mampu merusak keharmonisan keluarga. Kalian memiliki ikatan batin yang sangat kuat, saling mengerti tanpa harus banyak bicara, dan memiliki cinta yang mengakar dalam.\n\nSecara ekonomi dan sosial, kehidupan kalian akan stabil. Rezeki selalu ada dan cukup untuk memenuhi kebutuhan. Kunci utama dari langgengnya hubungan ini adalah rasa syukur yang tak pernah putus atas ketenangan yang jarang didapatkan oleh pasangan lain."
+      "desc":
+          "Dalam perhitungan Primbon Jawa, jatuh pada hitungan PESTHI adalah sebuah anugerah agung dari Sang Pencipta. Rumah tangga yang dibangun di atas fondasi ini dijanjikan akan berjalan dengan sangat rukun, tenteram, dan damai sejahtera hingga masa tua memisahkan.\n\nKehidupan pernikahan kalian ibarat air sungai yang mengalir tenang. Meskipun sesekali ada kerikil masalah atau perbedaan pendapat, hal tersebut sama sekali tidak akan mampu merusak keharmonisan keluarga. Kalian memiliki ikatan batin yang sangat kuat, saling mengerti tanpa harus banyak bicara, dan memiliki cinta yang mengakar dalam.\n\nSecara ekonomi dan sosial, kehidupan kalian akan stabil. Rezeki selalu ada dan cukup untuk memenuhi kebutuhan. Kunci utama dari langgengnya hubungan ini adalah rasa syukur yang tak pernah putus atas ketenangan yang jarang didapatkan oleh pasangan lain.",
     },
     {
       "title": "PEGAT (1) - Ujian Kesabaran",
-      "desc": "Hitungan PEGAT (berarti putus/berpisah) menandakan adanya potensi rintangan yang cukup berat dalam perjalanan bahtera rumah tangga kalian. Sering kali, badai ujian ini dipicu oleh masalah ekonomi, perbedaan prinsip yang tajam, atau bahkan campur tangan pihak luar seperti keluarga besar maupun lingkungan pertemanan.\n\nNamun, ini bukanlah vonis mutlak, melainkan sebuah peringatan kewaspadaan. Pasangan dengan hitungan ini dituntut untuk memiliki kesabaran ekstra tinggi, kompromi tingkat dewa, dan kedewasaan emosional. Jika ego masing-masing selalu dikedepankan, maka potensi perpisahan akan sangat besar.\n\nUntuk menetralisir energi ini, disarankan untuk selalu mendekatkan diri kepada Tuhan, memperbanyak sedekah, dan saling menurunkan gengsi saat terjadi pertengkaran. Komunikasi yang terbuka dan niat untuk saling mempertahankan adalah kunci penawar paling ampuh."
+      "desc":
+          "Hitungan PEGAT (berarti putus/berpisah) menandakan adanya potensi rintangan yang cukup berat dalam perjalanan bahtera rumah tangga kalian. Sering kali, badai ujian ini dipicu oleh masalah ekonomi, perbedaan prinsip yang tajam, atau bahkan campur tangan pihak luar seperti keluarga besar maupun lingkungan pertemanan.\n\nNamun, ini bukanlah vonis mutlak, melainkan sebuah peringatan kewaspadaan. Pasangan dengan hitungan ini dituntut untuk memiliki kesabaran ekstra tinggi, kompromi tingkat dewa, dan kedewasaan emosional. Jika ego masing-masing selalu dikedepankan, maka potensi perpisahan akan sangat besar.\n\nUntuk menetralisir energi ini, disarankan untuk selalu mendekatkan diri kepada Tuhan, memperbanyak sedekah, dan saling menurunkan gengsi saat terjadi pertengkaran. Komunikasi yang terbuka dan niat untuk saling mempertahankan adalah kunci penawar paling ampuh.",
     },
     {
       "title": "RATU (2) - Mahkota Kehormatan",
-      "desc": "Pasangan yang jatuh pada hitungan RATU bagaikan raja dan permaisuri yang bertahta. Pernikahan kalian akan memancarkan aura wibawa dan karisma yang membuat kalian sangat disegani, dihormati, serta sering dijadikan teladan oleh tetangga dan lingkungan sekitar.\n\nKehidupan rumah tangga ini dijanjikan akan dikaruniai rezeki yang mengalir deras dari berbagai pintu, kebahagiaan yang melimpah, dan kemuliaan derajat. Kalian akan sangat jarang tertimpa musibah besar atau kesulitan finansial yang berarti, karena energi alam semesta sangat mendukung persatuan kalian.\n\nKalian adalah pasangan yang sangat beruntung. Namun, ingatlah bahwa mahkota Ratu juga membawa tanggung jawab. Jangan sampai kemuliaan ini membuat kalian sombong. Tetaplah dermawan dan merendah agar rezeki dan keharmonisan tersebut tetap kekal abadi."
+      "desc":
+          "Pasangan yang jatuh pada hitungan RATU bagaikan raja dan permaisuri yang bertahta. Pernikahan kalian akan memancarkan aura wibawa dan karisma yang membuat kalian sangat disegani, dihormati, serta sering dijadikan teladan oleh tetangga dan lingkungan sekitar.\n\nKehidupan rumah tangga ini dijanjikan akan dikaruniai rezeki yang mengalir deras dari berbagai pintu, kebahagiaan yang melimpah, dan kemuliaan derajat. Kalian akan sangat jarang tertimpa musibah besar atau kesulitan finansial yang berarti, karena energi alam semesta sangat mendukung persatuan kalian.\n\nKalian adalah pasangan yang sangat beruntung. Namun, ingatlah bahwa mahkota Ratu juga membawa tanggung jawab. Jangan sampai kemuliaan ini membuat kalian sombong. Tetaplah dermawan dan merendah agar rezeki dan keharmonisan tersebut tetap kekal abadi.",
     },
     {
       "title": "JODOH (3) - Takdir Semesta",
-      "desc": "Ini adalah tingkat kecocokan yang paling diidamkan. Jatuh pada hitungan JODOH berarti kalian memang ditakdirkan bersama oleh semesta, ibarat gembok yang telah menemukan kuncinya. Chemistry di antara kalian mengalir begitu natural tanpa perlu dipaksakan.\n\nKalian berdua memiliki kapasitas yang luar biasa untuk saling mentolerir, menerima kekurangan masa lalu, dan melengkapi satu sama lain. Rumah tangga ini akan diwarnai dengan romansa yang tak lekang oleh waktu, kerukunan, kedamaian, dan kasih sayang yang tulus hingga akhir hayat.\n\nKetika ada masalah, kalian selalu bisa menemukan jalan tengah dengan mudah. Komunikasi batin kalian sangat selaras. Jaga terus kemesraan dan komunikasi yang hangat ini, karena fondasi JODOH adalah anugerah terbesar dalam sebuah ikatan pernikahan."
+      "desc":
+          "Ini adalah tingkat kecocokan yang paling diidamkan. Jatuh pada hitungan JODOH berarti kalian memang ditakdirkan bersama oleh semesta, ibarat gembok yang telah menemukan kuncinya. Chemistry di antara kalian mengalir begitu natural tanpa perlu dipaksakan.\n\nKalian berdua memiliki kapasitas yang luar biasa untuk saling mentolerir, menerima kekurangan masa lalu, dan melengkapi satu sama lain. Rumah tangga ini akan diwarnai dengan romansa yang tak lekang oleh waktu, kerukunan, kedamaian, dan kasih sayang yang tulus hingga akhir hayat.\n\nKetika ada masalah, kalian selalu bisa menemukan jalan tengah dengan mudah. Komunikasi batin kalian sangat selaras. Jaga terus kemesraan dan komunikasi yang hangat ini, karena fondasi JODOH adalah anugerah terbesar dalam sebuah ikatan pernikahan.",
     },
     {
       "title": "TOPO (4) - Berakit-rakit ke Hulu",
-      "desc": "Filosofi TOPO (bertapa) menggambarkan sebuah rumah tangga yang harus melewati kawah candradimuka di awal pernikahannya. Di tahun-tahun pertama, kalian mungkin akan dihadapkan pada berbagai kesulitan, baik dari segi finansial yang serba pas-pasan, maupun gesekan sifat karena proses penyesuaian (babat alas).\n\nMasa-masa awal ini akan penuh dengan air mata, keringat, dan perjuangan batin. Namun, jangan pernah menyerah! Ujian ini sebenarnya adalah cara alam semesta membentuk mental dan karakter kalian berdua agar menjadi sekuat baja.\n\nJika kalian berdua mampu bersabar, saling berpegangan tangan, dan tidak lari dari masalah, maka di pertengahan hingga akhir usia pernikahan, kalian akan menuai kesuksesan yang sangat luar biasa. Kalian akan membangun 'kerajaan' kalian sendiri dari nol, mencapai kekayaan, and kebahagiaan paripurna di masa tua."
+      "desc":
+          "Filosofi TOPO (bertapa) menggambarkan sebuah rumah tangga yang harus melewati kawah candradimuka di awal pernikahannya. Di tahun-tahun pertama, kalian mungkin akan dihadapkan pada berbagai kesulitan, baik dari segi finansial yang serba pas-pasan, maupun gesekan sifat karena proses penyesuaian (babat alas).\n\nMasa-masa awal ini akan penuh dengan air mata, keringat, dan perjuangan batin. Namun, jangan pernah menyerah! Ujian ini sebenarnya adalah cara alam semesta membentuk mental dan karakter kalian berdua agar menjadi sekuat baja.\n\nJika kalian berdua mampu bersabar, saling berpegangan tangan, dan tidak lari dari masalah, maka di pertengahan hingga akhir usia pernikahan, kalian akan menuai kesuksesan yang sangat luar biasa. Kalian akan membangun 'kerajaan' kalian sendiri dari nol, mencapai kekayaan, and kebahagiaan paripurna di masa tua.",
     },
     {
       "title": "TINARI (5) - Sang Penarik Rezeki",
-      "desc": "Pasangan dengan hitungan TINARI adalah mereka yang senantiasa dinaungi oleh bintang keberuntungan abadi. Kehidupan rumah tangga kalian akan terasa jauh lebih ringan karena kalian akan sangat mudah dalam mencari jalan rezeki.\n\nKalian akan jarang sekali mengalami kekurangan finansial yang mencekik. Ke mana pun kalian melangkah atau usaha apa pun yang kalian bangun bersama, pintu kemudahan akan selalu terbuka. Hidup kalian penuh dengan anugerah, keceriaan, dan rasa syukur yang berlimpah. \n\nSelain itu, rumah tangga Tinari sering kali menjadi tempat singgah yang nyaman bagi sanak saudara, karena kehangatan dan kemurahan hati kalian. Sangat cocok bagi kalian untuk membangun bisnis atau usaha bersama, karena perpaduan energi kalian adalah magnet rezeki yang sangat kuat."
+      "desc":
+          "Pasangan dengan hitungan TINARI adalah mereka yang senantiasa dinaungi oleh bintang keberuntungan abadi. Kehidupan rumah tangga kalian akan terasa jauh lebih ringan karena kalian akan sangat mudah dalam mencari jalan rezeki.\n\nKalian akan jarang sekali mengalami kekurangan finansial yang mencekik. Ke mana pun kalian melangkah atau usaha apa pun yang kalian bangun bersama, pintu kemudahan akan selalu terbuka. Hidup kalian penuh dengan anugerah, keceriaan, dan rasa syukur yang berlimpah. \n\nSelain itu, rumah tangga Tinari sering kali menjadi tempat singgah yang nyaman bagi sanak saudara, karena kehangatan dan kemurahan hati kalian. Sangat cocok bagi kalian untuk membangun bisnis atau usaha bersama, karena perpaduan energi kalian adalah magnet rezeki yang sangat kuat.",
     },
     {
       "title": "PADU (6) - Benci tapi Rindu",
-      "desc": "Hitungan PADU (bertengkar) mengisyaratkan sebuah rumah tangga yang akan sangat bising. Tiada hari tanpa cekcok, perdebatan, dan silang pendapat. Anehnya, pertengkaran ini sering kali hanya dipicu oleh masalah-masalah sepele atau sekadar adu gengsi dan ego masing-masing.\n\nBagi orang luar yang melihat, kalian mungkin terlihat seperti musuh yang terpaksa tinggal serumah. Namun inilah letak keunikannya: sekeras apa pun piring berterbangan atau pintu dibanting, kalian memiliki ikatan batin (chemistry) yang sangat aneh dan tak bisa dipisahkan. Kalian sering bertengkar, namun sangat jauh dari kata perceraian.\n\nKalian ibarat Tom & Jerry; tidak bisa hidup damai jika bersama, tapi akan saling mencari dan merindu gila-gilaan jika dipisahkan. Saran terbaik: belajarlah mengelola emosi dan ubah energi amarah menjadi candaan, agar rumah tangga tetap seru tanpa melukai hati."
+      "desc":
+          "Hitungan PADU (bertengkar) mengisyaratkan sebuah rumah tangga yang akan sangat bising. Tiada hari tanpa cekcok, perdebatan, dan silang pendapat. Anehnya, pertengkaran ini sering kali hanya dipicu oleh masalah-masalah sepele atau sekadar adu gengsi dan ego masing-masing.\n\nBagi orang luar yang melihat, kalian mungkin terlihat seperti musuh yang terpaksa tinggal serumah. Namun inilah letak keunikannya: sekeras apa pun piring berterbangan atau pintu dibanting, kalian memiliki ikatan batin (chemistry) yang sangat aneh dan tak bisa dipisahkan. Kalian sering bertengkar, namun sangat jauh dari kata perceraian.\n\nKalian ibarat Tom & Jerry; tidak bisa hidup damai jika bersama, tapi akan saling mencari dan merindu gila-gilaan jika dipisahkan. Saran terbaik: belajarlah mengelola emosi dan ubah energi amarah menjadi candaan, agar rumah tangga tetap seru tanpa melukai hati.",
     },
     {
       "title": "SUJANAN (7) - Badai Api Cemburu",
-      "desc": "Jatuh pada hitungan SUJANAN (curiga/cemburu) adalah sebuah peringatan keras. Rumah tangga ini sangat rawan didera cobaan emosional yang berat, terutama yang berkaitan dengan kepercayaan. Ada potensi besar munculnya kecemburuan buta, ketidaksetiaan, atau godaan kuat dari pihak ketiga.\n\nRumah tangga ini akan sering diuji oleh kecurigaan, baik yang beralasan maupun yang hanya sekadar prasangka. Ujian kesetiaan akan datang silih berganti. Oleh karena itu, hubungan ini menuntut kejujuran absolut dan transparansi total. Jangan pernah ada rahasia, baik urusan keuangan maupun urusan komunikasi di ponsel.\n\nUntuk menghindari kehancuran, kalian membutuhkan fondasi iman yang ekstra kuat. Perbanyaklah ibadah bersama, saling menguatkan komitmen setiap hari, dan segera potong rantai pergaulan yang berpotensi merusak rumah tangga. Kesetiaan adalah harga mati untuk hitungan ini."
+      "desc":
+          "Jatuh pada hitungan SUJANAN (curiga/cemburu) adalah sebuah peringatan keras. Rumah tangga ini sangat rawan didera cobaan emosional yang berat, terutama yang berkaitan dengan kepercayaan. Ada potensi besar munculnya kecemburuan buta, ketidaksetiaan, atau godaan kuat dari pihak ketiga.\n\nRumah tangga ini akan sering diuji oleh kecurigaan, baik yang beralasan maupun yang hanya sekadar prasangka. Ujian kesetiaan akan datang silih berganti. Oleh karena itu, hubungan ini menuntut kejujuran absolut dan transparansi total. Jangan pernah ada rahasia, baik urusan keuangan maupun urusan komunikasi di ponsel.\n\nUntuk menghindari kehancuran, kalian membutuhkan fondasi iman yang ekstra kuat. Perbanyaklah ibadah bersama, saling menguatkan komitmen setiap hari, dan segera potong rantai pergaulan yang berpotensi merusak rumah tangga. Kesetiaan adalah harga mati untuk hitungan ini.",
     },
   ];
 
@@ -593,104 +634,171 @@ class _WetonJodohPageState extends State<WetonJodohPage> {
         'pria': wetonPria,
         'wanita': wetonWanita,
         'total': totalNeptu,
-        'hasil': hasilJodoh[sisa]
+        'hasil': hasilJodoh[sisa],
       };
     });
   }
 
-  String _formatDate(DateTime? d) => d == null ? "Pilih Tanggal Lahir" : DateFormat('dd MMMM yyyy', 'id_ID').format(d);
+  String _formatDate(DateTime? d) =>
+      d == null
+          ? "Pilih Tanggal Lahir"
+          : DateFormat('dd MMMM yyyy', 'id_ID').format(d);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "CEK WETON JODOH",
           style: TextStyle(
-            color: Color(0xFFFFD54F),
+            color: const Color(0xFFFFD54F),
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
+            fontSize: 18.sp,
           ),
         ),
         backgroundColor: const Color(0xFF00332B),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Color(0xFFFFD54F)),
+        iconTheme: IconThemeData(color: const Color(0xFFFFD54F), size: 24.sp),
       ),
       body: Column(
         children: [
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20.w),
               children: [
-                const Text(
+                Text(
                   "Masukkan Tanggal Lahir Pasangan:",
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFFFD54F), fontSize: 16),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFFFFD54F),
+                    fontSize: 16.sp,
+                  ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20.h),
 
                 // Form Pria
-                _buildDateSelector("Tanggal Lahir Pria", tglPria, (date) => setState(() => tglPria = date), Icons.male),
-                const SizedBox(height: 15),
+                _buildDateSelector(
+                  "Tanggal Lahir Pria",
+                  tglPria,
+                  (date) => setState(() => tglPria = date),
+                  Icons.male,
+                ),
+                SizedBox(height: 15.h),
 
                 // Form Wanita
-                _buildDateSelector("Tanggal Lahir Wanita", tglWanita, (date) => setState(() => tglWanita = date), Icons.female),
-                const SizedBox(height: 30),
+                _buildDateSelector(
+                  "Tanggal Lahir Wanita",
+                  tglWanita,
+                  (date) => setState(() => tglWanita = date),
+                  Icons.female,
+                ),
+                SizedBox(height: 30.h),
 
                 // Tombol Hitung
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF00332B),
                     foregroundColor: const Color(0xFFFFD54F),
-                    side: const BorderSide(color: Color(0xFFFFD54F), width: 1.5),
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    side: BorderSide(
+                      color: const Color(0xFFFFD54F),
+                      width: 1.5.w,
+                    ),
+                    padding: EdgeInsets.symmetric(vertical: 15.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15.r),
+                    ),
                   ),
-                  onPressed: (tglPria != null && tglWanita != null) ? _kalkulasiJodoh : null,
-                  child: const Text("CEK KECOCOKAN", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                  onPressed:
+                      (tglPria != null && tglWanita != null)
+                          ? _kalkulasiJodoh
+                          : null,
+                  child: Text(
+                    "CEK KECOCOKAN",
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                  ),
                 ),
 
-                const SizedBox(height: 30),
+                SizedBox(height: 30.h),
 
                 // Hasil Ramalan
                 if (hasilRamalan != null) ...[
                   const Divider(color: Colors.white24),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20.h),
                   Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.all(20.w),
                     decoration: BoxDecoration(
                       color: const Color(0xFF141414),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFFFD54F).withOpacity(0.5)),
+                      borderRadius: BorderRadius.circular(20.r),
+                      border: Border.all(
+                        color: const Color(0xFFFFD54F).withOpacity(0.5),
+                      ),
                       boxShadow: [
-                        BoxShadow(color: const Color(0xFFFFD54F).withOpacity(0.05), blurRadius: 10, spreadRadius: 2),
+                        BoxShadow(
+                          color: const Color(0xFFFFD54F).withOpacity(0.05),
+                          blurRadius: 10.r,
+                          spreadRadius: 2.r,
+                        ),
                       ],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text("HASIL PERHITUNGAN NEPTU", style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 15),
+                        Text(
+                          "HASIL PERHITUNGAN NEPTU",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 15.h),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _buildNeptuBox("PRIA", hasilRamalan!['pria']['hari'], hasilRamalan!['pria']['pasaran'], hasilRamalan!['pria']['neptu']),
-                            const Text("+", style: TextStyle(color: Color(0xFFFFD54F), fontSize: 24, fontWeight: FontWeight.bold)),
-                            _buildNeptuBox("WANITA", hasilRamalan!['wanita']['hari'], hasilRamalan!['wanita']['pasaran'], hasilRamalan!['wanita']['neptu']),
+                            _buildNeptuBox(
+                              "PRIA",
+                              hasilRamalan!['pria']['hari'],
+                              hasilRamalan!['pria']['pasaran'],
+                              hasilRamalan!['pria']['neptu'],
+                            ),
+                            Text(
+                              "+",
+                              style: TextStyle(
+                                color: const Color(0xFFFFD54F),
+                                fontSize: 24.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            _buildNeptuBox(
+                              "WANITA",
+                              hasilRamalan!['wanita']['hari'],
+                              hasilRamalan!['wanita']['pasaran'],
+                              hasilRamalan!['wanita']['neptu'],
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20.h),
                         Text(
                           "TOTAL NEPTU: ${hasilRamalan!['total']}",
-                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20.h),
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(15),
+                          padding: EdgeInsets.all(15.w),
                           decoration: BoxDecoration(
                             color: const Color(0xFF00332B).withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(15),
+                            borderRadius: BorderRadius.circular(15.r),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -698,23 +806,31 @@ class _WetonJodohPageState extends State<WetonJodohPage> {
                               Center(
                                 child: Text(
                                   hasilRamalan!['hasil']['title'],
-                                  style: const TextStyle(color: Color(0xFFFFD54F), fontSize: 22, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    color: const Color(0xFFFFD54F),
+                                    fontSize: 22.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
-                              const SizedBox(height: 15),
+                              SizedBox(height: 15.h),
                               Text(
                                 hasilRamalan!['hasil']['desc'],
                                 textAlign: TextAlign.justify,
-                                style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.6),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14.sp,
+                                  height: 1.6,
+                                ),
                               ),
                             ],
                           ),
-                        )
+                        ),
                       ],
                     ),
-                  )
-                ]
+                  ),
+                ],
               ],
             ),
           ),
@@ -723,15 +839,37 @@ class _WetonJodohPageState extends State<WetonJodohPage> {
     );
   }
 
-  Widget _buildDateSelector(String label, DateTime? current, Function(DateTime) onSelect, IconData icon) {
+  Widget _buildDateSelector(
+    String label,
+    DateTime? current,
+    Function(DateTime) onSelect,
+    IconData icon,
+  ) {
     return Card(
       color: const Color(0xFF1A1A1A),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15), side: BorderSide(color: const Color(0xFFFFD54F).withOpacity(0.3))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15.r),
+        side: BorderSide(color: const Color(0xFFFFD54F).withOpacity(0.3)),
+      ),
       child: ListTile(
-        leading: Icon(icon, color: const Color(0xFFFFD54F)),
-        title: Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
-        subtitle: Text(_formatDate(current), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-        trailing: const Icon(Icons.calendar_today, color: Color(0xFFFFD54F), size: 18),
+        leading: Icon(icon, color: const Color(0xFFFFD54F), size: 24.sp),
+        title: Text(
+          label,
+          style: TextStyle(color: Colors.white54, fontSize: 12.sp),
+        ),
+        subtitle: Text(
+          _formatDate(current),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16.sp,
+          ),
+        ),
+        trailing: Icon(
+          Icons.calendar_today,
+          color: const Color(0xFFFFD54F),
+          size: 18.sp,
+        ),
         onTap: () async {
           DateTime? picked = await showDatePicker(
             context: context,
@@ -760,10 +898,23 @@ class _WetonJodohPageState extends State<WetonJodohPage> {
   Widget _buildNeptuBox(String label, String hari, String pasaran, int neptu) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(color: Color(0xFFFFD54F), fontWeight: FontWeight.bold)),
-        const SizedBox(height: 5),
-        Text("$hari $pasaran", style: const TextStyle(color: Colors.white, fontSize: 14)),
-        Text("($neptu)", style: const TextStyle(color: Colors.white54, fontSize: 14)),
+        Text(
+          label,
+          style: TextStyle(
+            color: const Color(0xFFFFD54F),
+            fontWeight: FontWeight.bold,
+            fontSize: 14.sp,
+          ),
+        ),
+        SizedBox(height: 5.h),
+        Text(
+          "$hari $pasaran",
+          style: TextStyle(color: Colors.white, fontSize: 14.sp),
+        ),
+        Text(
+          "($neptu)",
+          style: TextStyle(color: Colors.white54, fontSize: 14.sp),
+        ),
       ],
     );
   }
@@ -786,7 +937,13 @@ class _SelamatanPageState extends State<SelamatanPage> {
       DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(d);
 
   String _getPasaranJawa(DateTime date) {
-    final List<String> listPasaran = ['Wage', 'Kliwon', 'Legi', 'Pahing', 'Pon'];
+    final List<String> listPasaran = [
+      'Wage',
+      'Kliwon',
+      'Legi',
+      'Pahing',
+      'Pon',
+    ];
     int diff = date.difference(DateTime(1970, 1, 1)).inDays;
     return listPasaran[(diff % 5 + 5) % 5];
   }
@@ -802,29 +959,28 @@ class _SelamatanPageState extends State<SelamatanPage> {
     DateTime res = selectedDate.add(Duration(days: days - 1));
     return Card(
       color: const Color(0xFF1A1A1A),
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: EdgeInsets.only(bottom: 10.h),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-        side: BorderSide(
-          color: const Color(0xFFFFD54F).withOpacity(0.3),
-        ),
+        borderRadius: BorderRadius.circular(15.r),
+        side: BorderSide(color: const Color(0xFFFFD54F).withOpacity(0.3)),
       ),
       child: ListTile(
         title: Text(
           title,
-          style: const TextStyle(
-            color: Color(0xFFFFD54F),
+          style: TextStyle(
+            color: const Color(0xFFFFD54F),
             fontWeight: FontWeight.bold,
+            fontSize: 14.sp,
           ),
         ),
         subtitle: Text(
           _formatDateJawa(res),
-          style: const TextStyle(color: Colors.white, fontSize: 13),
+          style: TextStyle(color: Colors.white, fontSize: 13.sp),
         ),
-        trailing: const Icon(
+        trailing: Icon(
           Icons.calendar_today,
-          size: 18,
-          color: Color(0xFFFFD54F),
+          size: 18.sp,
+          color: const Color(0xFFFFD54F),
         ),
       ),
     );
@@ -834,47 +990,46 @@ class _SelamatanPageState extends State<SelamatanPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "KALKULATOR SELAMATAN",
           style: TextStyle(
-            color: Color(0xFFFFD54F),
+            color: const Color(0xFFFFD54F),
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
+            fontSize: 18.sp,
           ),
         ),
         backgroundColor: const Color(0xFF00332B),
         centerTitle: true,
-        iconTheme: const IconThemeData(
-          color: Color(0xFFFFD54F),
-        ),
+        iconTheme: IconThemeData(color: const Color(0xFFFFD54F), size: 24.sp),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(20.w),
         children: [
-          const Text(
+          Text(
             "Pilih Tanggal Meninggal (Geblag):",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 15,
-              color: Color(0xFFFFD54F),
+              fontSize: 15.sp,
+              color: const Color(0xFFFFD54F),
             ),
           ),
-          const SizedBox(height: 15),
+          SizedBox(height: 15.h),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF141414),
               foregroundColor: const Color(0xFFFFD54F),
-              side: const BorderSide(color: Color(0xFFFFD54F), width: 1.5),
-              padding: const EdgeInsets.symmetric(vertical: 15),
+              side: BorderSide(color: const Color(0xFFFFD54F), width: 1.5.w),
+              padding: EdgeInsets.symmetric(vertical: 15.h),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
+                borderRadius: BorderRadius.circular(15.r),
               ),
             ),
-            icon: const Icon(Icons.edit_calendar, size: 24),
+            icon: Icon(Icons.edit_calendar, size: 24.sp),
             label: Text(
               _formatDateJawa(selectedDate),
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold),
             ),
             onPressed: () async {
               DateTime? picked = await showDatePicker(
@@ -903,7 +1058,7 @@ class _SelamatanPageState extends State<SelamatanPage> {
               if (picked != null) setState(() => selectedDate = picked);
             },
           ),
-          const SizedBox(height: 25),
+          SizedBox(height: 25.h),
           _buildRow("Geblag (Hari H)", 1),
           _buildRow("3 Hari", 3),
           _buildRow("7 Hari", 7),
@@ -939,7 +1094,10 @@ class _JadwalSholatPageState extends State<JadwalSholatPage> {
   void initState() {
     super.initState();
     _timeString = DateFormat('HH:mm:ss').format(DateTime.now());
-    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _updateTime());
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (Timer t) => _updateTime(),
+    );
     _loadSavedLocation();
     _initJadwal();
   }
@@ -964,7 +1122,9 @@ class _JadwalSholatPageState extends State<JadwalSholatPage> {
   _loadSavedLocation() async {
     final prefs = await SharedPreferences.getInstance();
     setState(
-          () => alamatLengkap = prefs.getString('saved_address') ?? "Mencari lokasi...",
+      () =>
+          alamatLengkap =
+              prefs.getString('saved_address') ?? "Mencari lokasi...",
     );
   }
 
@@ -988,7 +1148,7 @@ class _JadwalSholatPageState extends State<JadwalSholatPage> {
         prayerTimes = PrayerTimes.today(myCoords, params);
         alamatLengkap = finalAlamat;
         koordinatStr =
-        "Lat: ${pos.latitude.toStringAsFixed(3)}, Lon: ${pos.longitude.toStringAsFixed(3)}";
+            "Lat: ${pos.latitude.toStringAsFixed(3)}, Lon: ${pos.longitude.toStringAsFixed(3)}";
       });
 
       NotificationService.scheduleAdzan(101, "Subuh", prayerTimes!.fajr);
@@ -1005,103 +1165,121 @@ class _JadwalSholatPageState extends State<JadwalSholatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "JADWAL SHOLAT",
           style: TextStyle(
-            color: Color(0xFFFFD54F),
+            color: const Color(0xFFFFD54F),
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
+            fontSize: 18.sp,
           ),
         ),
         backgroundColor: const Color(0xFF00332B),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Color(0xFFFFD54F)),
+        iconTheme: IconThemeData(color: const Color(0xFFFFD54F), size: 24.sp),
       ),
-      body: prayerTimes == null
-          ? const Center(
-        child: CircularProgressIndicator(color: Color(0xFFFFD54F)),
-      )
-          : Column(
-        children: [
-          // BOX JAM REALTIME (EMAS & HIJAU)
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.all(20),
-            padding: const EdgeInsets.symmetric(vertical: 25),
-            decoration: BoxDecoration(
-              color: const Color(0xFF004D40), // Hijau khas masjid
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFFFD54F), width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                const Text(
-                  "WAKTU SAAT INI",
-                  style: TextStyle(
-                    color: Color(0xFFFFD54F),
-                    fontSize: 14,
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.bold,
+      body:
+          prayerTimes == null
+              ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFFFFD54F)),
+              )
+              : Column(
+                children: [
+                  // BOX JAM REALTIME (EMAS & HIJAU)
+                  Container(
+                    width: double.infinity,
+                    margin: EdgeInsets.all(20.w),
+                    padding: EdgeInsets.symmetric(vertical: 25.h),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF004D40), // Hijau khas masjid
+                      borderRadius: BorderRadius.circular(20.r),
+                      border: Border.all(
+                        color: const Color(0xFFFFD54F),
+                        width: 2.w,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.5),
+                          blurRadius: 10.r,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          "WAKTU SAAT INI",
+                          style: TextStyle(
+                            color: const Color(0xFFFFD54F),
+                            fontSize: 14.sp,
+                            letterSpacing: 2,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 10.h),
+                        Text(
+                          _timeString, // Jam yang jalan detiknya
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 45.sp,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace', // Gaya digital classic
+                          ),
+                        ),
+                        Text(
+                          DateFormat(
+                            'EEEE, d MMMM yyyy',
+                            'id_ID',
+                          ).format(DateTime.now()),
+                          style: TextStyle(
+                            color: const Color(0xFFFFD54F),
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  _timeString, // Jam yang jalan detiknya
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 45,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'monospace', // Gaya digital classic
+                  // LOKASI
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          color: const Color(0xFFFFD54F),
+                          size: 16.sp,
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            alamatLengkap,
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13.sp,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Text(
-                  DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(DateTime.now()),
-                  style: const TextStyle(color: Color(0xFFFFD54F), fontSize: 14),
-                ),
-              ],
-            ),
-          ),
-          // LOKASI (INFO BOX LAMA DIKECILIN)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                const Icon(Icons.location_on, color: Color(0xFFFFD54F), size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    alamatLengkap,
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
-                    overflow: TextOverflow.ellipsis,
+                  SizedBox(height: 15.h),
+                  // LIST JADWAL SHOLAT
+                  Expanded(
+                    child: ListView(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      children: [
+                        _buildTimeCard("Subuh", prayerTimes!.fajr),
+                        _buildTimeCard("Terbit", prayerTimes!.sunrise),
+                        _buildTimeCard("Dzuhur", prayerTimes!.dhuhr),
+                        _buildTimeCard("Ashar", prayerTimes!.asr),
+                        _buildTimeCard("Maghrib", prayerTimes!.maghrib),
+                        _buildTimeCard("Isya", prayerTimes!.isha),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 15),
-          // LIST JADWAL SHOLAT
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              children: [
-                _buildTimeCard("Subuh", prayerTimes!.fajr),
-                _buildTimeCard("Terbit", prayerTimes!.sunrise),
-                _buildTimeCard("Dzuhur", prayerTimes!.dhuhr),
-                _buildTimeCard("Ashar", prayerTimes!.asr),
-                _buildTimeCard("Maghrib", prayerTimes!.maghrib),
-                _buildTimeCard("Isya", prayerTimes!.isha),
-              ],
-            ),
-          ),
-        ],
-      ),
+                ],
+              ),
       bottomNavigationBar: _buildBottomBranding(),
     );
   }
@@ -1111,40 +1289,40 @@ class _JadwalSholatPageState extends State<JadwalSholatPage> {
       behavior: HitTestBehavior.opaque,
       onTap: _kontakYusuf,
       child: Container(
-        height: 85,
-        decoration: const BoxDecoration(
-          color: Color(0xFF00332B),
+        height: 85.h,
+        decoration: BoxDecoration(
+          color: const Color(0xFF00332B),
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+            topLeft: Radius.circular(20.r),
+            topRight: Radius.circular(20.r),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const CircleAvatar(
-              radius: 24,
+            CircleAvatar(
+              radius: 24.r,
               backgroundColor: Colors.white,
               child: CircleAvatar(
-                radius: 22,
-                backgroundImage: AssetImage('assets/images/yusuf.png'),
+                radius: 22.r,
+                backgroundImage: const AssetImage('assets/images/yusuf.png'),
               ),
             ),
-            const SizedBox(width: 15),
-            const Column(
+            SizedBox(width: 15.w),
+            Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   "Dibuat oleh",
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                  style: TextStyle(color: Colors.white70, fontSize: 12.sp),
                 ),
                 Text(
                   "Yusuf Ardiansyah",
                   style: TextStyle(
-                    color: Color(0xFFFFD54F),
+                    color: const Color(0xFFFFD54F),
                     fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                    fontSize: 18.sp,
                   ),
                 ),
               ],
@@ -1157,14 +1335,17 @@ class _JadwalSholatPageState extends State<JadwalSholatPage> {
 
   Widget _buildTimeCard(String label, DateTime time) => Card(
     color: const Color(0xFF1A1A1A),
-    margin: const EdgeInsets.only(bottom: 10),
+    margin: EdgeInsets.only(bottom: 10.h),
     child: ListTile(
-      title: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+      title: Text(
+        label,
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+      ),
       trailing: Text(
         DateFormat.Hm().format(time.toLocal()),
-        style: const TextStyle(
-          color: Color(0xFFFFD54F),
-          fontSize: 20,
+        style: TextStyle(
+          color: const Color(0xFFFFD54F),
+          fontSize: 20.sp,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -1217,17 +1398,18 @@ class _QiblahPageState extends State<QiblahPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "ARAH KIBLAT",
           style: TextStyle(
-            color: Color(0xFFFFD54F),
+            color: const Color(0xFFFFD54F),
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
+            fontSize: 18.sp,
           ),
         ),
         backgroundColor: const Color(0xFF00332B),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Color(0xFFFFD54F)),
+        iconTheme: IconThemeData(color: const Color(0xFFFFD54F), size: 24.sp),
       ),
       body: StreamBuilder(
         stream: FlutterQiblah.qiblahStream,
@@ -1248,19 +1430,19 @@ class _QiblahPageState extends State<QiblahPage>
             _s = false;
           }
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20.w),
             child: Column(
               children: [
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: const Color(0xFF141414),
-                    borderRadius: BorderRadius.circular(25),
+                    borderRadius: BorderRadius.circular(25.r),
                     border: Border.all(
                       color:
-                      sel < 2.0
-                          ? Colors.greenAccent
-                          : const Color(0xFFFFD54F).withOpacity(0.3),
+                          sel < 2.0
+                              ? Colors.greenAccent
+                              : const Color(0xFFFFD54F).withOpacity(0.3),
                     ),
                   ),
                   child: CustomPaint(
@@ -1268,34 +1450,34 @@ class _QiblahPageState extends State<QiblahPage>
                       color: const Color(0xFFFFD54F).withOpacity(0.5),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 30),
+                      padding: EdgeInsets.symmetric(vertical: 30.h),
                       child: Column(
                         children: [
                           Text(
                             "${q.direction.toStringAsFixed(0)}°",
                             style: TextStyle(
-                              fontSize: 45,
+                              fontSize: 45.sp,
                               fontWeight: FontWeight.bold,
                               color:
-                              sel < 2.0
-                                  ? Colors.greenAccent
-                                  : const Color(0xFFFFD54F),
+                                  sel < 2.0
+                                      ? Colors.greenAccent
+                                      : const Color(0xFFFFD54F),
                             ),
                           ),
-                          const SizedBox(height: 15),
+                          SizedBox(height: 15.h),
                           Stack(
                             alignment: Alignment.center,
                             children: [
                               Container(
-                                width: 280,
-                                height: 280,
+                                width: 280.w,
+                                height: 280.w,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: const Color(
                                       0xFFFFD54F,
                                     ).withOpacity(0.4),
-                                    width: 2,
+                                    width: 2.w,
                                   ),
                                 ),
                               ),
@@ -1310,7 +1492,7 @@ class _QiblahPageState extends State<QiblahPage>
                                     ),
                                     child: Image.asset(
                                       'assets/images/compass.png',
-                                      width: 220,
+                                      width: 220.w,
                                     ),
                                   ),
                                 ),
@@ -1318,17 +1500,17 @@ class _QiblahPageState extends State<QiblahPage>
                               Transform.rotate(
                                 angle: (q.qiblah * (math.pi / 180) * -1),
                                 child: SizedBox(
-                                  width: 280,
-                                  height: 280,
+                                  width: 280.w,
+                                  height: 280.w,
                                   child: Align(
                                     alignment: Alignment.topCenter,
                                     child: Padding(
-                                      padding: const EdgeInsets.only(top: 10),
+                                      padding: EdgeInsets.only(top: 10.h),
                                       child: ScaleTransition(
                                         scale: _pulseAnimation,
                                         child: Image.asset(
                                           'assets/images/kabah.png',
-                                          width: 55,
+                                          width: 55.w,
                                         ),
                                       ),
                                     ),
@@ -1337,17 +1519,18 @@ class _QiblahPageState extends State<QiblahPage>
                               ),
                             ],
                           ),
-                          const SizedBox(height: 20),
+                          SizedBox(height: 20.h),
                           Text(
                             sel < 2.0
                                 ? "POSISI KIBLAT PAS!"
                                 : "PUTAR HP PERLAHAN",
                             style: TextStyle(
                               color:
-                              sel < 2.0
-                                  ? Colors.greenAccent
-                                  : Colors.white54,
+                                  sel < 2.0
+                                      ? Colors.greenAccent
+                                      : Colors.white54,
                               fontWeight: FontWeight.bold,
+                              fontSize: 14.sp,
                             ),
                           ),
                         ],
@@ -1355,7 +1538,7 @@ class _QiblahPageState extends State<QiblahPage>
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20.h),
                 _buildInfoTile("Lokasi", "Otomatis (GPS)", Icons.my_location),
                 _buildInfoTile(
                   "Derajat Kiblat",
@@ -1381,40 +1564,40 @@ class _QiblahPageState extends State<QiblahPage>
       behavior: HitTestBehavior.opaque,
       onTap: _kontakYusuf,
       child: Container(
-        height: 85,
-        decoration: const BoxDecoration(
-          color: Color(0xFF00332B),
+        height: 85.h,
+        decoration: BoxDecoration(
+          color: const Color(0xFF00332B),
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+            topLeft: Radius.circular(20.r),
+            topRight: Radius.circular(20.r),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const CircleAvatar(
-              radius: 24,
+            CircleAvatar(
+              radius: 24.r,
               backgroundColor: Colors.white,
               child: CircleAvatar(
-                radius: 22,
-                backgroundImage: AssetImage('assets/images/yusuf.png'),
+                radius: 22.r,
+                backgroundImage: const AssetImage('assets/images/yusuf.png'),
               ),
             ),
-            const SizedBox(width: 15),
-            const Column(
+            SizedBox(width: 15.w),
+            Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   "Dibuat oleh",
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                  style: TextStyle(color: Colors.white70, fontSize: 12.sp),
                 ),
                 Text(
                   "Yusuf Ardiansyah",
                   style: TextStyle(
-                    color: Color(0xFFFFD54F),
+                    color: const Color(0xFFFFD54F),
                     fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                    fontSize: 18.sp,
                   ),
                 ),
               ],
@@ -1427,19 +1610,16 @@ class _QiblahPageState extends State<QiblahPage>
 
   Widget _buildInfoTile(String t, String v, IconData i) => Card(
     color: const Color(0xFF1A1A1A),
-    margin: const EdgeInsets.only(bottom: 8),
+    margin: EdgeInsets.only(bottom: 8.h),
     child: ListTile(
-      leading: Icon(i, color: const Color(0xFFFFD54F), size: 20),
-      title: Text(
-        t,
-        style: const TextStyle(fontSize: 13, color: Colors.white70),
-      ),
+      leading: Icon(i, color: const Color(0xFFFFD54F), size: 20.sp),
+      title: Text(t, style: TextStyle(fontSize: 13.sp, color: Colors.white70)),
       trailing: Text(
         v,
-        style: const TextStyle(
+        style: TextStyle(
           fontWeight: FontWeight.bold,
           color: Colors.white,
-          fontSize: 13,
+          fontSize: 13.sp,
         ),
       ),
     ),
@@ -1530,125 +1710,126 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
         centerTitle: true,
         title: Text(
           widget.title.toUpperCase(),
-          style: const TextStyle(
-            color: Color(0xFFFFD54F),
+          style: TextStyle(
+            color: const Color(0xFFFFD54F),
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
+            fontSize: 18.sp,
           ),
         ),
         backgroundColor: const Color(0xFF00332B),
-        iconTheme: const IconThemeData(color: Color(0xFFFFD54F)),
+        iconTheme: IconThemeData(color: const Color(0xFFFFD54F), size: 24.sp),
       ),
       body:
-      isLoading
-          ? const Center(
-        child: CircularProgressIndicator(color: Color(0xFFFFD54F)),
-      )
-          : ScrollablePositionedList.builder(
-        itemCount: d.length,
-        itemScrollController: itemScrollController,
-        itemBuilder: (c, i) {
-          bool isP =
-              currentPlayingIndex == i &&
-                  player.state == PlayerState.playing;
-          return Container(
-            margin: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-            decoration: BoxDecoration(
-              color:
-              isP
-                  ? const Color(0xFF00241E)
-                  : const Color(0xFF141414),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isP ? const Color(0xFFFFD54F) : Colors.white10,
-                width: 1.5,
-              ),
-            ),
-            child: CustomPaint(
-              painter: AbstractPlatinumPainter(
-                color: const Color(0xFFFFD54F).withOpacity(0.8),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(35),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      d[i]['ar'],
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: isTahlil ? 24 : 28,
-                        fontWeight: FontWeight.bold,
-                        height: 2,
+          isLoading
+              ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFFFFD54F)),
+              )
+              : ScrollablePositionedList.builder(
+                itemCount: d.length,
+                itemScrollController: itemScrollController,
+                itemBuilder: (c, i) {
+                  bool isP =
+                      currentPlayingIndex == i &&
+                      player.state == PlayerState.playing;
+                  return Container(
+                    margin: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 12.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color:
+                          isP
+                              ? const Color(0xFF00241E)
+                              : const Color(0xFF141414),
+                      borderRadius: BorderRadius.circular(20.r),
+                      border: Border.all(
+                        color: isP ? const Color(0xFFFFD54F) : Colors.white10,
+                        width: 1.5.w,
                       ),
                     ),
-                    const SizedBox(height: 25),
-                    if (!isTahlil)
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "${d[i]['tr']}",
-                                  style: const TextStyle(
-                                    color: Color(0xFFFFD54F),
-                                    fontStyle: FontStyle.italic,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  formatTeks(d[i]['id']),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                    height: 1.5,
-                                    letterSpacing: 0.3,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 15),
-                          GestureDetector(
-                            onTap: () => putarAudio(i),
-                            child: Icon(
-                              isP
-                                  ? Icons.pause_circle
-                                  : Icons.play_circle,
-                              color: const Color(0xFF00BFA5),
-                              size: 48,
-                            ),
-                          ),
-                        ],
+                    child: CustomPaint(
+                      painter: AbstractPlatinumPainter(
+                        color: const Color(0xFFFFD54F).withOpacity(0.8),
                       ),
-                    if (isTahlil)
-                      Text(
-                        formatTeks(d[i]['id']),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFFFFD54F),
-                          fontSize: 16,
-                          height: 1.6,
-                          fontWeight: FontWeight.w500,
+                      child: Padding(
+                        padding: EdgeInsets.all(35.w),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              d[i]['ar'],
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: (isTahlil ? 24 : 28).sp,
+                                fontWeight: FontWeight.bold,
+                                height: 2,
+                              ),
+                            ),
+                            SizedBox(height: 25.h),
+                            if (!isTahlil)
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "${d[i]['tr']}",
+                                          style: TextStyle(
+                                            color: const Color(0xFFFFD54F),
+                                            fontStyle: FontStyle.italic,
+                                            fontSize: 16.sp,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                        SizedBox(height: 12.h),
+                                        Text(
+                                          formatTeks(d[i]['id']),
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15.sp,
+                                            height: 1.5,
+                                            letterSpacing: 0.3,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(width: 15.w),
+                                  GestureDetector(
+                                    onTap: () => putarAudio(i),
+                                    child: Icon(
+                                      isP
+                                          ? Icons.pause_circle
+                                          : Icons.play_circle,
+                                      color: const Color(0xFF00BFA5),
+                                      size: 48.sp,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            if (isTahlil)
+                              Text(
+                                formatTeks(d[i]['id']),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: const Color(0xFFFFD54F),
+                                  fontSize: 16.sp,
+                                  height: 1.6,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                  ],
-                ),
+                    ),
+                  );
+                },
               ),
-            ),
-          );
-        },
-      ),
     );
   }
 }
@@ -1685,81 +1866,82 @@ class _DoaListPageState extends State<DoaListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "KUMPULAN DOA",
           style: TextStyle(
-            color: Color(0xFFFFD54F),
+            color: const Color(0xFFFFD54F),
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
+            fontSize: 18.sp,
           ),
         ),
         backgroundColor: const Color(0xFF00332B),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Color(0xFFFFD54F)),
+        iconTheme: IconThemeData(color: const Color(0xFFFFD54F), size: 24.sp),
       ),
       body:
-      l
-          ? const Center(
-        child: CircularProgressIndicator(color: Color(0xFFFFD54F)),
-      )
-          : ListView.builder(
-        itemCount: d.length,
-        itemBuilder:
-            (c, i) => Container(
-          margin: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 8,
-          ),
-          decoration: BoxDecoration(
-            color: const Color(0xFF141414),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: const Color(0xFFFFD54F).withOpacity(0.3),
-            ),
-          ),
-          child: CustomPaint(
-            painter: AbstractPlatinumPainter(
-              color: const Color(0xFFFFD54F).withOpacity(0.5),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(25),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    d[i]['judul'],
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFFFFD54F),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+          l
+              ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFFFFD54F)),
+              )
+              : ListView.builder(
+                itemCount: d.length,
+                itemBuilder:
+                    (c, i) => Container(
+                      margin: EdgeInsets.symmetric(
+                        horizontal: 10.w,
+                        vertical: 8.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF141414),
+                        borderRadius: BorderRadius.circular(20.r),
+                        border: Border.all(
+                          color: const Color(0xFFFFD54F).withOpacity(0.3),
+                        ),
+                      ),
+                      child: CustomPaint(
+                        painter: AbstractPlatinumPainter(
+                          color: const Color(0xFFFFD54F).withOpacity(0.5),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(25.w),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                d[i]['judul'],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: const Color(0xFFFFD54F),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18.sp,
+                                ),
+                              ),
+                              Divider(color: Colors.white10, height: 30.h),
+                              Text(
+                                d[i]['ar'],
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                  fontSize: 24.sp,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.8,
+                                ),
+                              ),
+                              SizedBox(height: 20.h),
+                              Text(
+                                d[i]['id'],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: const Color(0xFFFFD54F),
+                                  fontSize: 14.sp,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  const Divider(color: Colors.white10, height: 30),
-                  Text(
-                    d[i]['ar'],
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      height: 1.8,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    d[i]['id'],
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFFFFD54F),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
               ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -1796,46 +1978,47 @@ class _TasbihPageState extends State<TasbihPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F0F),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "TASBIH DIGITAL",
           style: TextStyle(
-            color: Color(0xFFFFD54F),
+            color: const Color(0xFFFFD54F),
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
+            fontSize: 18.sp,
           ),
         ),
         backgroundColor: const Color(0xFF00332B),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Color(0xFFFFD54F)),
+        iconTheme: IconThemeData(color: const Color(0xFFFFD54F), size: 24.sp),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
+            Text(
               "Subhanallah • Alhamdulillah • Allahuakbar",
               style: TextStyle(
                 color: Colors.white54,
-                fontSize: 14,
+                fontSize: 14.sp,
                 fontStyle: FontStyle.italic,
               ),
             ),
-            const SizedBox(height: 40),
+            SizedBox(height: 40.h),
             Container(
-              width: 260,
-              height: 260,
+              width: 260.w,
+              height: 260.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: const Color(0xFF141414),
                 border: Border.all(
                   color: const Color(0xFFFFD54F).withOpacity(0.5),
-                  width: 3,
+                  width: 3.w,
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFFFFD54F).withOpacity(0.05),
-                    blurRadius: 30,
-                    spreadRadius: 10,
+                    blurRadius: 30.r,
+                    spreadRadius: 10.r,
                   ),
                 ],
               ),
@@ -1845,16 +2028,16 @@ class _TasbihPageState extends State<TasbihPage> {
                   children: [
                     Text(
                       "$_counter",
-                      style: const TextStyle(
-                        fontSize: 85,
+                      style: TextStyle(
+                        fontSize: 85.sp,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFFFFD54F),
+                        color: const Color(0xFFFFD54F),
                       ),
                     ),
                     Text(
                       "Hitungan",
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 16.sp,
                         color: Colors.white.withOpacity(0.5),
                         letterSpacing: 2,
                       ),
@@ -1863,7 +2046,7 @@ class _TasbihPageState extends State<TasbihPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 70),
+            SizedBox(height: 70.h),
             Material(
               color: Colors.transparent,
               child: InkWell(
@@ -1872,51 +2055,51 @@ class _TasbihPageState extends State<TasbihPage> {
                 splashColor: const Color(0xFFFFD54F).withOpacity(0.5),
                 highlightColor: const Color(0xFF00BFA5).withOpacity(0.3),
                 child: Ink(
-                  width: 110,
-                  height: 110,
+                  width: 110.w,
+                  height: 110.w,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: const Color(0xFF00332B),
                     border: Border.all(
                       color: const Color(0xFFFFD54F),
-                      width: 2,
+                      width: 2.w,
                     ),
                     boxShadow: [
                       BoxShadow(
                         color: const Color(0xFF00BFA5).withOpacity(0.2),
-                        blurRadius: 20,
-                        spreadRadius: 2,
+                        blurRadius: 20.r,
+                        spreadRadius: 2.r,
                       ),
                     ],
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.fingerprint,
-                    size: 60,
-                    color: Color(0xFFFFD54F),
+                    size: 60.sp,
+                    color: const Color(0xFFFFD54F),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 15),
-            const Text(
+            SizedBox(height: 15.h),
+            Text(
               "TAP DI SINI",
               style: TextStyle(
                 color: Colors.white54,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2,
+                fontSize: 14.sp,
               ),
             ),
-            const SizedBox(height: 50),
+            SizedBox(height: 50.h),
             IconButton(
               onPressed: _resetHitungan,
-              icon: const Icon(Icons.refresh),
-              iconSize: 32,
+              icon: Icon(Icons.refresh, size: 32.sp),
               color: Colors.redAccent.withOpacity(0.8),
               tooltip: "Reset Hitungan",
             ),
-            const Text(
+            Text(
               "Reset",
-              style: TextStyle(color: Colors.white38, fontSize: 12),
+              style: TextStyle(color: Colors.white38, fontSize: 12.sp),
             ),
           ],
         ),
@@ -1958,108 +2141,109 @@ class _AsmaulHusnaPageState extends State<AsmaulHusnaPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F0F),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "ASMAUL HUSNA",
           style: TextStyle(
-            color: Color(0xFFFFD54F),
+            color: const Color(0xFFFFD54F),
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
+            fontSize: 18.sp,
           ),
         ),
         backgroundColor: const Color(0xFF00332B),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Color(0xFFFFD54F)),
+        iconTheme: IconThemeData(color: const Color(0xFFFFD54F), size: 24.sp),
       ),
       body:
-      l
-          ? const Center(
-        child: CircularProgressIndicator(color: Color(0xFFFFD54F)),
-      )
-          : GridView.builder(
-        padding: const EdgeInsets.all(15),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 15,
-          mainAxisSpacing: 15,
-          childAspectRatio: 0.85,
-        ),
-        itemCount: d.length,
-        itemBuilder: (context, index) {
-          final item = d[index];
-          return Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF141414),
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(
-                color: const Color(0xFFFFD54F).withOpacity(0.3),
-              ),
-            ),
-            child: CustomPaint(
-              painter: AbstractPlatinumPainter(
-                color: const Color(0xFFFFD54F).withOpacity(0.5),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFF00332B),
-                        border: Border.all(
-                          color: const Color(0xFFFFD54F),
-                        ),
-                      ),
-                      child: Text(
-                        item["no"],
-                        style: const TextStyle(
-                          color: Color(0xFFFFD54F),
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      item["arab"],
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      item["latin"],
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Color(0xFFFFD54F),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item["arti"],
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 11,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const Spacer(),
-                  ],
+          l
+              ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFFFFD54F)),
+              )
+              : GridView.builder(
+                padding: EdgeInsets.all(15.w),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 15.w,
+                  mainAxisSpacing: 15.h,
+                  childAspectRatio: 0.85,
                 ),
+                itemCount: d.length,
+                itemBuilder: (context, index) {
+                  final item = d[index];
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF141414),
+                      borderRadius: BorderRadius.circular(15.r),
+                      border: Border.all(
+                        color: const Color(0xFFFFD54F).withOpacity(0.3),
+                      ),
+                    ),
+                    child: CustomPaint(
+                      painter: AbstractPlatinumPainter(
+                        color: const Color(0xFFFFD54F).withOpacity(0.5),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(12.w),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(6.w),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: const Color(0xFF00332B),
+                                border: Border.all(
+                                  color: const Color(0xFFFFD54F),
+                                ),
+                              ),
+                              child: Text(
+                                item["no"],
+                                style: TextStyle(
+                                  color: const Color(0xFFFFD54F),
+                                  fontSize: 10.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              item["arab"],
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 26.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 8.h),
+                            Text(
+                              item["latin"],
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: const Color(0xFFFFD54F),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14.sp,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              item["arti"],
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11.sp,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const Spacer(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
-            ),
-          );
-        },
-      ),
     );
   }
 }
@@ -2075,10 +2259,10 @@ class AbstractPlatinumPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint =
-    Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.2;
     void drawCorner(double x, double y, bool isRight, bool isBottom) {
       double dX = isRight ? -35 : 35;
       double dY = isBottom ? -35 : 35;
