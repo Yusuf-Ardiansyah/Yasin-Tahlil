@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Keamanan Keystore/JKS (Tambahan Wajib agar kunci aplikasi tidak bocor)
+*.jks
+*.keystore
+key.properties

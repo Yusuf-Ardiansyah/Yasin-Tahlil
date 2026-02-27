@@ -11,13 +11,12 @@ android {
 
     signingConfigs {
         create("release") {
-            // JKS kamu sudah terenkripsi dengan password ini
+            // Konfigurasi JKS Yusuf Ardiansyah
             keyAlias = "ILOVEYOU"
             keyPassword = "159753" 
             storeFile = file("ILOVEYOU.jks")
             storePassword = "159753"
             
-            // Mengarahkan agar menggunakan format enkripsi PKCS12 yang lebih aman
             enableV1Signing = true
             enableV2Signing = true
         }
@@ -25,15 +24,17 @@ android {
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        // Diperbarui ke Java 11 untuk menghilangkan warning obsolete
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
+        // Diperbarui ke Java 11 agar sinkron dengan compileOptions
+        jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
-    // Membungkam warning Java 8 agar terminal bersih
+    // Membungkam warning Java jika masih muncul di compiler
     tasks.withType<JavaCompile> {
         options.compilerArgs.add("-Xlint:-options")
     }
@@ -51,9 +52,9 @@ android {
         release {
             signingConfig = signingConfigs.getByName("release")
             
-            // --- AKTIVASI PROGUARD (ENKRIPSI/ACAK KODE) ---
-            isMinifyEnabled = true      // Mengacak nama fungsi agar tidak bisa dibaca pembajak
-            isShrinkResources = true    // Menghapus file sampah agar APK lebih ringan
+            // --- AKTIVASI PROGUARD (KEAMANAN APLIKASI) ---
+            isMinifyEnabled = true      
+            isShrinkResources = true    
             
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -68,6 +69,6 @@ flutter {
 }
 
 dependencies {
-    // BERHASIL DIUBAH KE VERSI 2.1.4 UNTUK DUKUNGAN OTA UPDATE
+    // Dukungan fitur Java modern untuk Android lama
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

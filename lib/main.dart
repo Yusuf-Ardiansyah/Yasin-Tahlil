@@ -35,7 +35,7 @@ void main() async {
 }
 
 // ==========================================
-// SERVICE: NOTIFIKASI ADZAN
+// SERVICE: NOTIFIKASI ADZAN (VERSI STABIL V17)
 // ==========================================
 class NotificationService {
   static final _notifications = FlutterLocalNotificationsPlugin();
@@ -50,6 +50,8 @@ class NotificationService {
 
   static Future scheduleAdzan(int id, String title, DateTime time) async {
     if (time.isBefore(DateTime.now())) return;
+
+    // Format aman untuk versi stabil v17.x
     await _notifications.zonedSchedule(
       id,
       'Waktunya Sholat $title',
@@ -608,7 +610,7 @@ class _WetonJodohPageState extends State<WetonJodohPage> {
     {
       "title": "TOPO (4) - Berakit-rakit ke Hulu",
       "desc":
-      "Filosofi TOPO (bertapa) menggambarkan sebuah rumah tangga yang harus melewati kawah candradimuka di awal pernikahannya. Di tahun-tahun pertama, kalian mungkin akan dihadapkan pada berbagai kesulitan, baik dari segi finansial yang serba pas-pasan, maupun gesekan sifat karena proses penyesuaian (babat alas).\n\nMasa-masa awal ini akan penuh dengan air mata, keringat, dan perjuangan batin. Namun, jangan pernah menyerah! Ujian ini sebenarnya adalah cara alam semesta membentuk mental dan karakter kalian berdua agar menjadi sekuat baja.\n\nJika kalian berdua mampu bersabar, saling berpegangan tangan, dan tidak lari dari masalah, maka di pertengahan hingga akhir usia pernikahan, kalian akan menuai kesuksesan yang sangat luar biasa. Kalian akan membangun 'kerajaan' kalian sendiri dari nol, mencapai kekayaan, and kebahagiaan paripurna di masa tua.",
+      "Filosofi TOPO (bertapa) menggambarkan sebuah rumah tangga yang harus melewati kawah candradimuka di awal pernikahannya. Di tahun-fallback-pertama, kalian mungkin akan dihadapkan pada berbagai kesulitan, baik dari segi finansial yang serba pas-pasan, maupun gesekan sifat karena proses penyesuaian (babat alas).\n\nMasa-masa awal ini akan penuh dengan air mata, keringat, dan perjuangan batin. Namun, jangan pernah menyerah! Ujian ini sebenarnya adalah cara alam semesta membentuk mental dan karakter kalian berdua agar menjadi sekuat baja.\n\nJika kalian berdua mampu bersabar, saling berpegangan tangan, dan tidak lari dari masalah, maka di pertengahan hingga akhir usia pernikahan, kalian akan menuai kesuksesan yang sangat luar biasa. Kalian akan membangun 'kerajaan' kalian sendiri dari nol, mencapai kekayaan, and kebahagiaan paripurna di masa tua.",
     },
     {
       "title": "TINARI (5) - Sang Penarik Rezeki",
