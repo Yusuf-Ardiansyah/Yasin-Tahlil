@@ -27,11 +27,48 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 // IMPORT PENERJEMAH BAHASA INDONESIA UNTUK KALENDER
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+// ==========================================
+// IMPORT FIREBASE, CLOUD FIRESTORE & GOOGLE LOGIN
+// ==========================================
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'firebase_options.dart';
+
 void main() async {
+  // 1. Pastikan Flutter Binding sudah siap
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 2. Inisialisasi Firebase (Wajib nyala duluan sebelum aplikasi jalan)
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // 3. Inisialisasi pengaturan format tanggal Indonesia & Notifikasi Adzan
   await initializeDateFormatting('id_ID', null);
   await NotificationService.init();
+
+  // 4. Jalankan Aplikasi
   runApp(const AlWaqiahApp());
+}
+
+// ==========================================
+// SERVICE: DATABASE FIREBASE (HADLOROH CLOUD)
+// ==========================================
+class DatabaseService {
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final String? uid = FirebaseAuth.instance.currentUser?.uid;
+
+  // Fungsi simpan nama Almarhum
+  Future<void> addAlmarhum(String nama, String binBinti) async {
+    if (uid != null) {
+      await _db.collection('users').doc(uid).collection('hadloroh').add({
+        'nama': nama,
+        'bin_binti': binBinti,
+        'timestamp': FieldValue.serverTimestamp(),
+        'order': DateTime.now().millisecondsSinceEpoch, // BIAR BISA DIURUTKAN
+      });
+    }
+  }
 }
 
 // ==========================================
@@ -44,7 +81,6 @@ class NotificationService {
     tz.initializeTimeZones();
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    // FIX: Gunakan named parameter 'settings' untuk inisialisasi versi terbaru
     await _notifications.initialize(
       settings: const InitializationSettings(android: android),
     );
@@ -53,7 +89,6 @@ class NotificationService {
   static Future scheduleAdzan(int id, String title, DateTime time) async {
     if (time.isBefore(DateTime.now())) return;
 
-    // FIX: Gunakan named parameter untuk semua argumen di zonedSchedule
     await _notifications.zonedSchedule(
       id: id,
       title: 'Waktunya Sholat $title',
@@ -65,7 +100,9 @@ class NotificationService {
           'Notifikasi Adzan',
           importance: Importance.max,
           priority: Priority.high,
-          sound: RawResourceAndroidNotificationSound('adzan'),
+          sound: RawResourceAndroidNotificationSound(
+            'adzan',
+          ), // Pastikan file adzan.mp3 ada di res/raw
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -99,26 +136,19 @@ class AlWaqiahApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // BUNGKUS DENGAN SCREENUTILINIT AGAR SEMUA OTOMATIS RESPONSIVE
     return ScreenUtilInit(
-      designSize: const Size(360, 800), // Ukuran standar desain HP
+      designSize: const Size(360, 800),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (_, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-
-          // --- PENGATURAN BAHASA INDONESIA (KALENDER DLL) ---
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          supportedLocales: const [
-            Locale('id', 'ID'),
-          ],
-          // --------------------------------------------------
-
+          supportedLocales: const [Locale('id', 'ID')],
           theme: ThemeData(
             brightness: Brightness.dark,
             scaffoldBackgroundColor: const Color(0xFF0F0F0F),
@@ -126,20 +156,14 @@ class AlWaqiahApp extends StatelessWidget {
           ),
           home: UpgradeAlert(
             dialogStyle: UpgradeDialogStyle.cupertino,
-            // Gaya elegan ala iOS
-            // --- BAGIAN FORCE UPDATE (WAJIB UPDATE) ---
             showIgnore: false,
-            // Hilangkan tombol "Abaikan"
             showLater: false,
-            // Hilangkan tombol "Nanti"
-            // ------------------------------------------
             onUpdate: () {
               executeUpdate();
               return false;
             },
             upgrader: Upgrader(
               messages: _CustomUpgraderMessages(),
-              // Panggil pesan custom di sini
               storeController: UpgraderStoreController(
                 onAndroid:
                     () => UpgraderAppcastStore(
@@ -177,10 +201,87 @@ class _CustomUpgraderMessages extends UpgraderMessages {
 }
 
 // ==========================================
-// HALAMAN: MENU UTAMA (BANNER INSPIRASI)
+// HALAMAN: MENU UTAMA (DENGAN LOGIN GOOGLE)
 // ==========================================
-class MenuUtama extends StatelessWidget {
+class MenuUtama extends StatefulWidget {
   const MenuUtama({super.key});
+
+  @override
+  State<MenuUtama> createState() => _MenuUtamaState();
+}
+
+class _MenuUtamaState extends State<MenuUtama> {
+  User? _currentUser;
+  bool _isGoogleInit = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Cek otomatis apakah user sudah login sebelumnya
+    _currentUser = FirebaseAuth.instance.currentUser;
+  }
+
+  // --- FUNGSI LOGIN GOOGLE SULTAN (STANDAR TERBARU v7.2.0+) ---
+  Future<void> _signInWithGoogle() async {
+    try {
+      final googleSignIn = GoogleSignIn.instance;
+      await googleSignIn.initialize(
+        serverClientId:
+        '46216843544-8mvgrmgbmcogehsno469bgj3ovugh7bq.apps.googleusercontent.com',
+      );
+      final GoogleSignInAccount googleUser = await googleSignIn.authenticate();
+      final String? idToken = googleUser.authentication.idToken;
+
+      final authClient = googleUser.authorizationClient;
+      var authorization = await authClient.authorizationForScopes([
+        'email',
+        'profile',
+      ]);
+      authorization ??= await authClient.authorizeScopes(['email', 'profile']);
+
+      final String? accessToken = authorization?.accessToken;
+
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: accessToken,
+        idToken: idToken,
+      );
+
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithCredential(credential);
+
+      setState(() {
+        _currentUser = userCredential.user;
+      });
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Alhamdulillah, selamat datang ${_currentUser?.displayName}!",
+          ),
+          backgroundColor: const Color(0xFF00BFA5),
+        ),
+      );
+    } catch (e) {
+      debugPrint("Error Login: $e");
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Gagal login, periksa koneksi atau SHA-1."),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
+
+  // --- FUNGSI LOGOUT ---
+  Future<void> _signOut() async {
+    await GoogleSignIn.instance.signOut();
+    await FirebaseAuth.instance.signOut();
+    setState(() {
+      _currentUser = null;
+    });
+  }
 
   Future<void> _kontakYusuf() async {
     final Uri url = Uri.parse(
@@ -240,10 +341,70 @@ class MenuUtama extends StatelessWidget {
         ),
         centerTitle: true,
         backgroundColor: const Color(0xFF00332B),
+        actions: [
+          if (_currentUser != null)
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.white70),
+              onPressed: _signOut,
+              tooltip: "Keluar Akun",
+            ),
+        ],
       ),
       body: ListView(
         padding: EdgeInsets.all(15.w),
         children: [
+          // --- WIDGET PROFIL PENGGUNA ---
+          _buildGoogleLoginCard(),
+
+          // --- WIDGET TOTAL DOA (FITUR BARU) ---
+          if (_currentUser != null)
+            StreamBuilder<QuerySnapshot>(
+              stream:
+              FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(_currentUser!.uid)
+                  .collection('hadloroh')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                int total = snapshot.hasData ? snapshot.data!.docs.length : 0;
+
+                return Container(
+                  margin: EdgeInsets.only(top: 15.h, bottom: 5.h),
+                  padding: EdgeInsets.all(15.w),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00332B).withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(15.r),
+                    border: Border.all(
+                      color: const Color(0xFF00BFA5).withOpacity(0.5),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.auto_awesome,
+                        color: const Color(0xFFFFD54F),
+                        size: 24.sp,
+                      ),
+                      SizedBox(width: 15.w),
+                      Expanded(
+                        child: Text(
+                          "Alhamdulillah, kamu sudah mengirim doa untuk $total almarhum keluarga.",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w500,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+
+          SizedBox(height: 15.h),
+
           Container(
             margin: EdgeInsets.only(bottom: 10.h),
             padding: EdgeInsets.all(20.w),
@@ -331,6 +492,14 @@ class MenuUtama extends StatelessWidget {
           ),
           _buildMenuItem(
             context,
+            "👥",
+            "Daftar Hadloroh",
+            "Kirim Doa (Tersimpan di Cloud)",
+            Colors.blueGrey,
+            "hadloroh",
+          ),
+          _buildMenuItem(
+            context,
             "✨",
             "Al-Waqiah",
             "96 Ayat - Audio Full",
@@ -396,55 +565,120 @@ class MenuUtama extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomBranding(context),
+      bottomNavigationBar: _buildBottomBranding(),
     );
   }
 
-  Widget _buildBottomBranding(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: _kontakYusuf,
-      child: Container(
-        height: 85.h,
-        decoration: BoxDecoration(
-          color: const Color(0xFF00332B),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20.r),
-            topRight: Radius.circular(20.r),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 24.r,
-              backgroundColor: Colors.white,
-              child: CircleAvatar(
-                radius: 22.r,
-                backgroundImage: const AssetImage('assets/images/yusuf.png'),
-              ),
+  Widget _buildGoogleLoginCard() {
+    return Container(
+      padding: EdgeInsets.all(15.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFF141414),
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: const Color(0xFFFFD54F).withOpacity(0.3)),
+      ),
+      child:
+      _currentUser == null
+          ? Row(
+        children: [
+          CircleAvatar(
+            radius: 25.r,
+            backgroundColor: Colors.white10,
+            child: Icon(
+              Icons.person_outline,
+              color: Colors.white54,
+              size: 28.sp,
             ),
-            SizedBox(width: 15.w),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+          ),
+          SizedBox(width: 15.w),
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Dibuat oleh",
-                  style: TextStyle(color: Colors.white70, fontSize: 12.sp),
+                  "Simpan Ibadah ke Cloud",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.sp,
+                  ),
                 ),
                 Text(
-                  "Yusuf Ardiansyah",
+                  "Login untuk simpan Hadloroh & Tasbih",
                   style: TextStyle(
-                    color: const Color(0xFFFFD54F),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18.sp,
+                    color: Colors.white54,
+                    fontSize: 11.sp,
                   ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+              padding: EdgeInsets.symmetric(
+                horizontal: 15.w,
+                vertical: 8.h,
+              ),
+            ),
+            onPressed: _signInWithGoogle,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.g_mobiledata,
+                  color: Colors.red,
+                  size: 24.sp,
+                ),
+                Text(
+                  "Login",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.sp,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      )
+          : Row(
+        children: [
+          CircleAvatar(
+            radius: 25.r,
+            backgroundImage: NetworkImage(_currentUser!.photoURL ?? ''),
+            backgroundColor: Colors.white10,
+          ),
+          SizedBox(width: 15.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _currentUser!.displayName ?? "Hamba Allah",
+                  style: TextStyle(
+                    color: const Color(0xFFFFD54F),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15.sp,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  "Status: Terhubung ke Cloud ☁️",
+                  style: TextStyle(
+                    color: const Color(0xFF00BFA5),
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -530,6 +764,22 @@ class MenuUtama extends StatelessWidget {
             c,
             MaterialPageRoute(builder: (c) => const DoaListPage()),
           );
+        } else if (type == "hadloroh") {
+          if (FirebaseAuth.instance.currentUser == null) {
+            ScaffoldMessenger.of(c).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  "Silakan login Google dulu ya untuk akses fitur ini!",
+                ),
+                backgroundColor: Colors.redAccent,
+              ),
+            );
+          } else {
+            Navigator.push(
+              c,
+              MaterialPageRoute(builder: (c) => const HadlorohPage()),
+            );
+          }
         } else {
           Navigator.push(
             c,
@@ -541,6 +791,387 @@ class MenuUtama extends StatelessWidget {
       },
     ),
   );
+
+  Widget _buildBottomBranding() {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _kontakYusuf,
+      child: Container(
+        height: 85.h,
+        decoration: BoxDecoration(
+          color: const Color(0xFF00332B),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20.r),
+            topRight: Radius.circular(20.r),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 24.r,
+              backgroundColor: Colors.white,
+              child: CircleAvatar(
+                radius: 22.r,
+                backgroundImage: const AssetImage('assets/images/yusuf.png'),
+              ),
+            ),
+            SizedBox(width: 15.w),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Dibuat oleh",
+                  style: TextStyle(color: Colors.white70, fontSize: 12.sp),
+                ),
+                Text(
+                  "Yusuf Ardiansyah",
+                  style: TextStyle(
+                    color: const Color(0xFFFFD54F),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18.sp,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ==========================================
+// HALAMAN: DAFTAR HADLOROH (DENGAN DRAG AND DROP)
+// ==========================================
+class HadlorohPage extends StatefulWidget {
+  const HadlorohPage({super.key});
+
+  @override
+  State<HadlorohPage> createState() => _HadlorohPageState();
+}
+
+class _HadlorohPageState extends State<HadlorohPage> {
+  void _showAddNamaSheet(BuildContext context) {
+    final TextEditingController _namaController = TextEditingController();
+    final TextEditingController _binController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF141414),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.r)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            bool _isSaving = false;
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 20.w,
+                right: 20.w,
+                top: 20.h,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 50.w,
+                      height: 4.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+                  Text(
+                    "Tambah Nama Almarhum/ah",
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFFFFD54F),
+                    ),
+                  ),
+                  SizedBox(height: 15.h),
+                  TextField(
+                    controller: _namaController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: "Nama Lengkap",
+                      labelStyle: const TextStyle(color: Colors.white54),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.white24),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Color(0xFFFFD54F)),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      prefixIcon: Icon(
+                        Icons.person_outline,
+                        color: const Color(0xFFFFD54F),
+                        size: 20.sp,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  TextField(
+                    controller: _binController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: "Bin / Binti (Opsional)",
+                      labelStyle: const TextStyle(color: Colors.white54),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.white24),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Color(0xFFFFD54F)),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      prefixIcon: Icon(
+                        Icons.family_restroom,
+                        color: const Color(0xFFFFD54F),
+                        size: 20.sp,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50.h,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00332B),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          side: const BorderSide(color: Color(0xFFFFD54F)),
+                        ),
+                      ),
+                      onPressed:
+                      _isSaving
+                          ? null
+                          : () async {
+                        setModalState(
+                              () => _isSaving = true,
+                        );
+
+                        if (_namaController.text.isNotEmpty) {
+                          await DatabaseService().addAlmarhum(
+                            _namaController.text,
+                            _binController.text,
+                          );
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Data berhasil disimpan di Cloud! ☁️",
+                                ),
+                                backgroundColor: Color(0xFF00BFA5),
+                              ),
+                            );
+                          }
+                        } else {
+                          setModalState(() => _isSaving = false);
+                        }
+                      },
+                      child:
+                      _isSaving
+                          ? SizedBox(
+                        width: 20.w,
+                        height: 20.w,
+                        child: const CircularProgressIndicator(
+                          color: Color(0xFFFFD54F),
+                          strokeWidth: 2,
+                        ),
+                      )
+                          : Text(
+                        "Simpan ke Cloud ☁️",
+                        style: TextStyle(
+                          color: const Color(0xFFFFD54F),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          "DAFTAR HADLOROH",
+          style: TextStyle(
+            color: const Color(0xFFFFD54F),
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.5,
+            fontSize: 18.sp,
+          ),
+        ),
+        backgroundColor: const Color(0xFF00332B),
+        centerTitle: true,
+        iconTheme: IconThemeData(color: const Color(0xFFFFD54F), size: 24.sp),
+      ),
+      body:
+      uid == null
+          ? Center(
+        child: Text(
+          "Silakan login terlebih dahulu.",
+          style: TextStyle(color: Colors.white, fontSize: 14.sp),
+        ),
+      )
+          : StreamBuilder<QuerySnapshot>(
+        stream:
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('hadloroh')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFFFFD54F),
+              ),
+            );
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(
+              child: Text(
+                "Belum ada daftar nama.\nKlik tombol + di bawah untuk menambahkan.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 14.sp,
+                  height: 1.5,
+                ),
+              ),
+            );
+          }
+
+          List<DocumentSnapshot> docs = snapshot.data!.docs.toList();
+          docs.sort((a, b) {
+            var dataA = a.data() as Map<String, dynamic>;
+            var dataB = b.data() as Map<String, dynamic>;
+            int orderA =
+            dataA.containsKey('order')
+                ? dataA['order']
+                : 999999999999;
+            int orderB =
+            dataB.containsKey('order')
+                ? dataB['order']
+                : 999999999999;
+            return orderA.compareTo(orderB);
+          });
+
+          return ReorderableListView.builder(
+            padding: EdgeInsets.all(15.w),
+            itemCount: docs.length,
+            onReorder: (oldIndex, newIndex) async {
+              if (newIndex > oldIndex) {
+                newIndex -= 1;
+              }
+              final item = docs.removeAt(oldIndex);
+              docs.insert(newIndex, item);
+
+              WriteBatch batch = FirebaseFirestore.instance.batch();
+              for (int i = 0; i < docs.length; i++) {
+                batch.update(docs[i].reference, {'order': i});
+              }
+              await batch.commit();
+            },
+            itemBuilder: (context, index) {
+              var data = docs[index].data() as Map<String, dynamic>;
+              return Card(
+                key: ValueKey(docs[index].id),
+                color: const Color(0xFF1A1A1A),
+                margin: EdgeInsets.only(bottom: 10.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.r),
+                  side: BorderSide(
+                    color: const Color(0xFFFFD54F).withOpacity(0.3),
+                  ),
+                ),
+                child: ListTile(
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 15.w,
+                    vertical: 5.h,
+                  ),
+                  leading: CircleAvatar(
+                    backgroundColor: const Color(0xFF00332B),
+                    child: Icon(
+                      Icons.person,
+                      color: const Color(0xFFFFD54F),
+                      size: 20.sp,
+                    ),
+                  ),
+                  title: Text(
+                    data['nama'] ?? "",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15.sp,
+                    ),
+                  ),
+                  subtitle: Text(
+                    "Bin/Binti: ${data['bin_binti'] ?? '-'}",
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: Colors.redAccent,
+                          size: 20.sp,
+                        ),
+                        onPressed: () => docs[index].reference.delete(),
+                        tooltip: "Hapus",
+                      ),
+                      Icon(
+                        Icons.drag_indicator,
+                        color: Colors.white54,
+                        size: 24.sp,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFFFFD54F),
+        onPressed: () => _showAddNamaSheet(context),
+        child: const Icon(Icons.add, color: Color(0xFF00332B)),
+      ),
+    );
+  }
 }
 
 // ==========================================
@@ -590,7 +1221,7 @@ class _WetonJodohPageState extends State<WetonJodohPage> {
     {
       "title": "PESTHI (8/0) - Kedamaian Sejati",
       "desc":
-      "Dalam perhitungan Primbon Jawa, jatuh pada hitungan PESTHI adalah sebuah anugerah agung dari Sang Pencipta. Rumah tangga yang dibangun di atas fondasi ini dijanjikan akan berjalan dengan sangat rukun, tenteram, dan damai sejahtera hingga masa tua memisahkan.\n\nKehidupan pernikahan kalian ibarat air sungai yang mengalir tenang. Meskipun sesekali ada kerikil masalah atau perbedaan pendapat, hal tersebut sama sekali tidak akan mampu merusak keharmonisan keluarga. Kalian memiliki ikatan batin yang sangat kuat, saling mengerti tanpa harus banyak bicara, dan memiliki cinta yang mengakar dalam.\n\nSecara ekonomi dan sosial, kehidupan kalian akan stabil. Rezeki selalu ada dan cukup untuk memenuhi kebutuhan. Kunci utama dari langgengnya hubungan ini adalah rasa syukur yang tak pernah putus atas ketenangan yang jarang didapatkan oleh pasangan lain.",
+      "Dalam perhitungan Primbon Jawa, jatuh pada hitungan PESTHI adalah sebuah anugerah agung dari Sang Pencipta. Rumah tangga yang dibangun di atas fondasi ini dijanjikan akan berjalan dengan sangat rukun, tenteram, dan damai sejahtera hingga masa tua memisahkan.\n\nKehidupan pernikahan kalian ibarat air sungai yang mengalir tenang. Meskipun sesekali ada kerikil masalah atau perbedaan pendapat, hal tersebut sama sekali tidak akan mampu merusak keharmonisan keluarga. Kalian memiliki ikatan batin yang sangat kuat, saling mengerti tanpa harus banyak bicara, and memiliki cinta yang mengakar dalam.\n\nSecara ekonomi dan sosial, kehidupan kalian akan stabil. Rezeki selalu ada dan cukup untuk memenuhi kebutuhan. Kunci utama dari langgengnya hubungan ini adalah rasa syukur yang tak pernah putus atas ketenangan yang jarang didapatkan oleh pasangan lain.",
     },
     {
       "title": "PEGAT (1) - Ujian Kesabaran",
@@ -1371,7 +2002,7 @@ class _JadwalSholatPageState extends State<JadwalSholatPage> {
 }
 
 // ==========================================
-// HALAMAN: ARAH KIBLAT (ANIMASI PULSE)
+// HALAMAN: ARAH KIBLAT (ANIMASI PULSE & PREMIUM HAPTIC)
 // ==========================================
 class QiblahPage extends StatefulWidget {
   const QiblahPage({super.key});
@@ -1382,7 +2013,9 @@ class QiblahPage extends StatefulWidget {
 
 class _QiblahPageState extends State<QiblahPage>
     with SingleTickerProviderStateMixin {
-  bool _s = false;
+  bool _isAligned = false;
+  double _lastVibratedDirection = 0.0;
+
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -1391,9 +2024,11 @@ class _QiblahPageState extends State<QiblahPage>
     super.initState();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(
+        milliseconds: 800,
+      ), // Dipercepat dikit biar lebih responsif
     )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.25).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
   }
@@ -1436,16 +2071,39 @@ class _QiblahPageState extends State<QiblahPage>
               child: CircularProgressIndicator(color: Color(0xFFFFD54F)),
             );
           }
+
           final q = snapshot.data!;
-          double sel = (q.direction - q.qiblah).abs();
-          if (sel < 2.0) {
-            if (!_s) {
-              HapticFeedback.vibrate();
-              _s = true;
+
+          // Kalkulasi selisih derajat yang lebih akurat (handling 360 to 0)
+          double diff = (q.direction - q.qiblah).abs();
+          if (diff > 180) diff = 360 - diff;
+
+          bool isCurrentlyAligned = diff < 2.0; // Toleransi 2 derajat
+
+          // LOGIC HAPTIC SULTAN
+          if (isCurrentlyAligned) {
+            if (!_isAligned) {
+              // Getaran berat beruntun saat pertama kali pas menghadap Kiblat
+              HapticFeedback.heavyImpact();
+              Future.delayed(
+                const Duration(milliseconds: 150),
+                    () => HapticFeedback.heavyImpact(),
+              );
+              Future.delayed(
+                const Duration(milliseconds: 300),
+                    () => HapticFeedback.heavyImpact(),
+              );
+              _isAligned = true;
             }
           } else {
-            _s = false;
+            _isAligned = false;
+            // Getaran halus 'tick' setiap diputar 3 derajat
+            if ((q.direction - _lastVibratedDirection).abs() > 3.0) {
+              HapticFeedback.selectionClick();
+              _lastVibratedDirection = q.direction;
+            }
           }
+
           return SingleChildScrollView(
             padding: EdgeInsets.all(20.w),
             child: Column(
@@ -1457,10 +2115,24 @@ class _QiblahPageState extends State<QiblahPage>
                     borderRadius: BorderRadius.circular(25.r),
                     border: Border.all(
                       color:
-                      sel < 2.0
+                      isCurrentlyAligned
                           ? Colors.greenAccent
                           : const Color(0xFFFFD54F).withOpacity(0.3),
+                      width:
+                      isCurrentlyAligned
+                          ? 3.w
+                          : 1.w, // Border menebal pas sejajar
                     ),
+                    boxShadow:
+                    isCurrentlyAligned
+                        ? [
+                      BoxShadow(
+                        color: Colors.greenAccent.withOpacity(0.2),
+                        blurRadius: 20.r,
+                        spreadRadius: 5.r,
+                      ),
+                    ]
+                        : [],
                   ),
                   child: CustomPaint(
                     painter: AbstractPlatinumPainter(
@@ -1476,7 +2148,7 @@ class _QiblahPageState extends State<QiblahPage>
                               fontSize: 45.sp,
                               fontWeight: FontWeight.bold,
                               color:
-                              sel < 2.0
+                              isCurrentlyAligned
                                   ? Colors.greenAccent
                                   : const Color(0xFFFFD54F),
                             ),
@@ -1524,10 +2196,16 @@ class _QiblahPageState extends State<QiblahPage>
                                     child: Padding(
                                       padding: EdgeInsets.only(top: 10.h),
                                       child: ScaleTransition(
-                                        scale: _pulseAnimation,
+                                        scale:
+                                        isCurrentlyAligned
+                                            ? _pulseAnimation
+                                            : const AlwaysStoppedAnimation(
+                                          1.0,
+                                        ),
                                         child: Image.asset(
                                           'assets/images/kabah.png',
-                                          width: 55.w,
+                                          width:
+                                          isCurrentlyAligned ? 65.w : 55.w,
                                         ),
                                       ),
                                     ),
@@ -1537,17 +2215,32 @@ class _QiblahPageState extends State<QiblahPage>
                             ],
                           ),
                           SizedBox(height: 20.h),
-                          Text(
-                            sel < 2.0
-                                ? "POSISI KIBLAT PAS!"
-                                : "PUTAR HP PERLAHAN",
-                            style: TextStyle(
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20.w,
+                              vertical: 8.h,
+                            ),
+                            decoration: BoxDecoration(
                               color:
-                              sel < 2.0
-                                  ? Colors.greenAccent
-                                  : Colors.white54,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14.sp,
+                              isCurrentlyAligned
+                                  ? Colors.green[900]
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(15.r),
+                            ),
+                            child: Text(
+                              isCurrentlyAligned
+                                  ? "✨ KIBLAT TERKUNCI ✨"
+                                  : "PUTAR HP PERLAHAN",
+                              style: TextStyle(
+                                color:
+                                isCurrentlyAligned
+                                    ? Colors.greenAccent
+                                    : Colors.white54,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14.sp,
+                                letterSpacing: 1.5,
+                              ),
                             ),
                           ),
                         ],
@@ -1644,7 +2337,7 @@ class _QiblahPageState extends State<QiblahPage>
 }
 
 // ==========================================
-// HALAMAN: DETAIL SURAH (YASIN/WAQIAH)
+// HALAMAN: DETAIL SURAH & TAHLIL (DENGAN INJEKSI HADLOROH CLOUD GLOWING)
 // ==========================================
 class SurahDetailPage extends StatefulWidget {
   final String fileName, title;
@@ -1659,22 +2352,86 @@ class SurahDetailPage extends StatefulWidget {
   State<SurahDetailPage> createState() => _SurahDetailPageState();
 }
 
-class _SurahDetailPageState extends State<SurahDetailPage> {
+class _SurahDetailPageState extends State<SurahDetailPage> with SingleTickerProviderStateMixin {
   final AudioPlayer player = AudioPlayer();
   final ItemScrollController itemScrollController = ItemScrollController();
   List d = [];
   bool isLoading = true;
   int? currentPlayingIndex;
 
+  // Variabel untuk Hadloroh
+  List<String> listNamaHadloroh = [];
+  bool isFetchingHadloroh = false;
+
+  // Controller untuk Glow Animasi
+  late AnimationController _glowController;
+  late Animation<double> _pulseAnimation;
+
   @override
   void initState() {
     super.initState();
     load();
+
+    // Inisialisasi animasi GLOW SULTAN
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
+    );
+
+    // Kalau ini halaman Tahlil, tarik data nama dari Cloud!
+    if (widget.title.toLowerCase().contains("tahlil")) {
+      _tarikDataHadloroh();
+    }
+
     player.onPlayerComplete.listen((e) {
       if (currentPlayingIndex != null && currentPlayingIndex! < d.length - 1) {
         putarAudio(currentPlayingIndex! + 1);
       }
     });
+  }
+
+  // --- FUNGSI TARIK NAMA HADLOROH DARI CLOUD ---
+  Future<void> _tarikDataHadloroh() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    setState(() => isFetchingHadloroh = true);
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('hadloroh')
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        // Ambil dan urutkan datanya
+        var docs = snapshot.docs.toList();
+        docs.sort((a, b) {
+          int orderA = a.data().containsKey('order') ? a['order'] : 999999;
+          int orderB = b.data().containsKey('order') ? b['order'] : 999999;
+          return orderA.compareTo(orderB);
+        });
+
+        List<String> namaFormat = [];
+        for (var doc in docs) {
+          String nama = doc['nama'] ?? '';
+          String bin = doc['bin_binti'] ?? '';
+          if (bin.isNotEmpty) {
+            namaFormat.add("$nama Bin/Binti $bin");
+          } else {
+            namaFormat.add(nama);
+          }
+        }
+        setState(() => listNamaHadloroh = namaFormat);
+      }
+    } catch (e) {
+      debugPrint("Gagal narik nama Hadloroh: $e");
+    } finally {
+      setState(() => isFetchingHadloroh = false);
+    }
   }
 
   load() async {
@@ -1716,12 +2473,19 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
   @override
   void dispose() {
     player.dispose();
+    _glowController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     bool isTahlil = widget.title.toLowerCase().contains("tahlil");
+
+    // Total item di list ditambah 1 kalau ada daftar Hadloroh
+    int totalItem = d.length;
+    bool hasHadloroh = isTahlil && listNamaHadloroh.isNotEmpty;
+    if (hasHadloroh) totalItem += 1;
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -1737,26 +2501,132 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
         backgroundColor: const Color(0xFF00332B),
         iconTheme: IconThemeData(color: const Color(0xFFFFD54F), size: 24.sp),
       ),
-      body:
-      isLoading
+      body: isLoading || isFetchingHadloroh
           ? const Center(
         child: CircularProgressIndicator(color: Color(0xFFFFD54F)),
       )
           : ScrollablePositionedList.builder(
-        itemCount: d.length,
+        itemCount: totalItem,
         itemScrollController: itemScrollController,
-        itemBuilder: (c, i) {
+        itemBuilder: (c, index) {
+          // --- KARTU EKSKLUSIF HADLOROH GLOWING SULTAN ---
+          if (hasHadloroh && index == 0) {
+            return AnimatedBuilder(
+              animation: _pulseAnimation,
+              builder: (context, child) {
+                return Container(
+                  margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 15.h),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF004D40), Color(0xFF00241E)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(25.r),
+                    border: Border.all(
+                      color: const Color(0xFFFFD54F).withOpacity(0.8),
+                      width: 1.5.w,
+                    ),
+                    // EFEK GLOW MENYALA (Emas Transparan)
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFD54F).withOpacity(0.2 * _pulseAnimation.value),
+                        blurRadius: 20.r * _pulseAnimation.value,
+                        spreadRadius: 5.r * _pulseAnimation.value,
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.5),
+                        offset: const Offset(0, 5),
+                        blurRadius: 10.r,
+                      ),
+                    ],
+                  ),
+                  child: CustomPaint(
+                    painter: AbstractPlatinumPainter(
+                      color: const Color(0xFFFFD54F).withOpacity(0.4),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(25.w),
+                      child: Column(
+                        children: [
+                          // Icon Berpijar
+                          Icon(
+                            Icons.auto_awesome,
+                            color: const Color(0xFFFFD54F),
+                            size: 30.sp * (0.8 + (_pulseAnimation.value * 0.2)), // Icon ikut berdenyut halus
+                          ),
+                          SizedBox(height: 12.h),
+                          Text(
+                            "KHUSUSON ILA RUHI :",
+                            style: TextStyle(
+                                color: const Color(0xFFFFD54F),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14.sp,
+                                letterSpacing: 3,
+                                shadows: [
+                                  Shadow(color: Colors.black, blurRadius: 5.r, offset: const Offset(1, 1))
+                                ]
+                            ),
+                          ),
+                          Divider(
+                              color: const Color(0xFFFFD54F).withOpacity(0.2),
+                              thickness: 1,
+                              height: 30.h
+                          ),
+                          // Daftar Nama Keluarga
+                          ...listNamaHadloroh.map((nama) => Padding(
+                            padding: EdgeInsets.only(bottom: 10.h),
+                            child: Text(
+                              "• $nama",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w600,
+                                height: 1.4,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          )),
+                          SizedBox(height: 15.h),
+                          // Footer Doa dengan Glow Hijau
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 5.h),
+                            decoration: BoxDecoration(
+                              color: Colors.black26,
+                              borderRadius: BorderRadius.circular(20.r),
+                            ),
+                            child: Text(
+                              "Laha / Lahumul Fatihah...",
+                              style: TextStyle(
+                                  color: const Color(0xFF00BFA5),
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13.sp
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+
+          // Penyesuaian index untuk ayat (karena index 0 dipakai Hadloroh jika ada)
+          int dataIndex = hasHadloroh ? index - 1 : index;
           bool isP =
-              currentPlayingIndex == i &&
+              currentPlayingIndex == dataIndex &&
                   player.state == PlayerState.playing;
+
           return Container(
             margin: EdgeInsets.symmetric(
               horizontal: 16.w,
               vertical: 12.h,
             ),
             decoration: BoxDecoration(
-              color:
-              isP
+              color: isP
                   ? const Color(0xFF00241E)
                   : const Color(0xFF141414),
               borderRadius: BorderRadius.circular(20.r),
@@ -1775,7 +2645,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      d[i]['ar'],
+                      d[dataIndex]['ar'],
                       textAlign: TextAlign.right,
                       style: TextStyle(
                         fontSize: (isTahlil ? 24 : 28).sp,
@@ -1794,7 +2664,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                               CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "${d[i]['tr']}",
+                                  "${d[dataIndex]['tr']}",
                                   style: TextStyle(
                                     color: const Color(0xFFFFD54F),
                                     fontStyle: FontStyle.italic,
@@ -1805,7 +2675,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                                 ),
                                 SizedBox(height: 12.h),
                                 Text(
-                                  formatTeks(d[i]['id']),
+                                  formatTeks(d[dataIndex]['id']),
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 15.sp,
@@ -1818,7 +2688,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                           ),
                           SizedBox(width: 15.w),
                           GestureDetector(
-                            onTap: () => putarAudio(i),
+                            onTap: () => putarAudio(dataIndex),
                             child: Icon(
                               isP
                                   ? Icons.pause_circle
@@ -1831,7 +2701,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                       ),
                     if (isTahlil)
                       Text(
-                        formatTeks(d[i]['id']),
+                        formatTeks(d[dataIndex]['id']),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: const Color(0xFFFFD54F),
@@ -1896,19 +2766,14 @@ class _DoaListPageState extends State<DoaListPage> {
         centerTitle: true,
         iconTheme: IconThemeData(color: const Color(0xFFFFD54F), size: 24.sp),
       ),
-      body:
-      l
+      body: l
           ? const Center(
         child: CircularProgressIndicator(color: Color(0xFFFFD54F)),
       )
           : ListView.builder(
         itemCount: d.length,
-        itemBuilder:
-            (c, i) => Container(
-          margin: EdgeInsets.symmetric(
-            horizontal: 10.w,
-            vertical: 8.h,
-          ),
+        itemBuilder: (c, i) => Container(
+          margin: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
           decoration: BoxDecoration(
             color: const Color(0xFF141414),
             borderRadius: BorderRadius.circular(20.r),
@@ -2171,8 +3036,7 @@ class _AsmaulHusnaPageState extends State<AsmaulHusnaPage> {
         centerTitle: true,
         iconTheme: IconThemeData(color: const Color(0xFFFFD54F), size: 24.sp),
       ),
-      body:
-      l
+      body: l
           ? const Center(
         child: CircularProgressIndicator(color: Color(0xFFFFD54F)),
       )
@@ -2275,8 +3139,7 @@ class AbstractPlatinumPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint =
-    Paint()
+    final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;

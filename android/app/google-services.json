@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "46216843544",
+    "project_id": "yasin-tahlil-premium",
+    "storage_bucket": "yasin-tahlil-premium.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:46216843544:android:022c8b363c97872adace6d",
+        "android_client_info": {
+          "package_name": "com.yusuf.yasin_tahlil"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIH_YR3IttkKr3BFrCJx_IQTQsqU0Hgjg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
