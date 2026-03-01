@@ -1,4 +1,5 @@
 ﻿# 📖 Yasin & Tahlil Premium
+ ![Login Google](https://img.shields.io/badge/Login%20Google-AKTIF-brightgreen?style=for-the-badge&logo=google&logoColor=white)
 
 ![Version](https://img.shields.io/badge/version-1.3.0-gold)
 ![Flutter](https://img.shields.io/badge/Flutter-v3.x-blue)
