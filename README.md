@@ -28,7 +28,12 @@ Aplikasi ibadah harian yang dirancang dengan antarmuka premium dan fitur lengkap
 * **Notifications:** Flutter Local Notifications & Workmanager
 * **Build Tool:** Custom `gas_build.bat` Sultan Edition
 
-![Developer](https://img.shields.io/badge/DEVELOPED%20BY-YUSUF%20ARDIANSYAH-FF0000?style=for-the-badge&logo=androidstudio&logoColor=white&color=initial&labelColor=000000)
-
----
-*Semoga aplikasi ini bermanfaat dan menjadi amal jariyah bagi pengembang dan penggunanya.*
+<p align="center">
+  <img src="https://img.shields.io/badge/DEVELOPED%20BY-YUSUF%20ARDIANSYAH-GOLD?style=for-the-badge&logo=flutter&logoColor=black&labelColor=20232A&color=D4AF37">
+</p>
+<p align="center">
+  <br>
+  <font color="#FFD700"><i>"Semoga aplikasi ini bermanfaat dan menjadi amal jariyah bagi pengembang dan penggunanya."</i></font>
+  <br>
+  <img src="https://img.shields.io/badge/Aamiin-Ya%20Robbal%20Alamin-DAA520?style=flat-square" />
+</p>
