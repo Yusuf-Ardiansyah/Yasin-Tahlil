@@ -1,5 +1,6 @@
 ﻿# 📖 Yasin & Tahlil Premium
- ![Login Google](https://img.shields.io/badge/Login%20Google-AKTIF-brightgreen?style=for-the-badge&logo=google&logoColor=white)
+ ![Login Google](https://img.shields.io/badge/Login%20Google-AKTIF-brightgreen?style=for-the-badge&logo=google&logoColor=white) 
+ ![Login](https://img.shields.io/badge/LOGIN-RED?style=for-the-badge) ![Google](https://img.shields.io/badge/GOOGLE-ORANGE?style=for-the-badge) ![Sudah](https://img.shields.io/badge/SUDAH-YELLOW?style=for-the-badge) ![Aktif](https://img.shields.io/badge/AKTIF-GREEN?style=for-the-badge) ![Dan](https://img.shields.io/badge/DAN-BLUE?style=for-the-badge) ![Cloud](https://img.shields.io/badge/CLOUD-VIOLET?style=for-the-badge)
 
 ![Version](https://img.shields.io/badge/version-1.3.0-gold)
 ![Flutter](https://img.shields.io/badge/Flutter-v3.x-blue)
